@@ -14,9 +14,12 @@
  #include "GdNeutronHPCapture.hh"
  /////////#include "OtherHPCaptureFS.hh"
  //#include "G4NeutronHPCaptureFS2.hh"
+ #include "G4NeutronHPCaptureFS.hh"
  #include "G4NeutronHPDeExGammas.hh"
+ #include "G4NeutronHPManager.hh"
  #include "G4ParticleTable.hh"
  #include "G4IonTable.hh"
+ #include "G4SystemOfUnits.hh"
 
  #include "GdNeutronHPCaptureFS.hh"
 
@@ -26,7 +29,7 @@
    ,numEle(0)
    {
      SetMinEnergy( 0.0 );
-     SetMaxEnergy( 20.*MeV );
+     SetMaxEnergy( 20.*CLHEP::MeV );
      /*
      G4cout << "Capture : start of construction!!!!!!!!"<<G4endl;
      if(!getenv("G4NEUTRONHPDATA")) 

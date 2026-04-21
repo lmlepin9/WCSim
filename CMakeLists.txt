@@ -8,16 +8,24 @@ find_program(CMAKE_CXX_COMPILER NAMES $ENV{CXX} g++ PATHS ENV PATH NO_DEFAULT_PA
 # Setup the project
 cmake_minimum_required(VERSION 2.8 FATAL_ERROR)
 project(WCSim)
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -Wall -fdiagnostics-color=always -fno-omit-frame-pointer")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fdiagnostics-color=always -std=c++1y") #-fmax-errors=1
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fdiagnostics-color=always") #-fmax-errors=1
 # NOTE: Geant4.10.2 changes the way VisualizationManager is instantiated - requires a verbosity argument.  
 # To handle the two types of instantiation: this env variable needs to be defined for geant versions > 10.1:
 if(DEFINED ENV{GEANT4_10_2})
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DGEANT4_10_2")
 endif()
+option(WCSIM_USE_GENIE "Build WCSim with GENIE support" ON)
 if(DEFINED ENV{NO_GENIE})
+  set(WCSIM_USE_GENIE OFF)
+endif()
+if(WCSIM_USE_GENIE AND (NOT DEFINED ENV{GENIE} OR NOT EXISTS "$ENV{GENIE}/include/GENIE/Framework/GHEP/GHepParticle.h"))
+  set(WCSIM_USE_GENIE OFF)
+  message(STATUS "GENIE not found in environment; disabling GENIE features.")
+endif()
+if(NOT WCSIM_USE_GENIE)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DNO_GENIE")
   message(STATUS "GENIE features disabled.")
 else()
@@ -46,7 +54,7 @@ endif()
 
 ## Load macros: need to compile ROOT through cmake first and execute bin/thisroot.sh
 include(${ROOT_USE_FILE})
-if(NOT DEFINED ENV{NO_GENIE})
+if(WCSIM_USE_GENIE)
 #----------------------------------------------------------------------------
 # GENIE stuff
 #
@@ -198,7 +206,11 @@ set(WCSIM_SCRIPTS
   WCSim.mac
   macros/daq.mac
   macros/annie_daq.mac
+  macros/visEventDisplay.mac
   macros/visOGLSX.mac
+  macros/visInteractive.mac
+  macros/visPhotonDebug.mac
+  macros/visQtEventDisplay.mac
   macros/visRayTracer.mac
   macros/tuning_parameters.mac
   macros/primaries_directory.mac
@@ -247,6 +259,13 @@ configure_file(
 configure_file(
   ${PROJECT_SOURCE_DIR}/WCSimRootDict_rdict.pcm
   ${PROJECT_BINARY_DIR}/libWCSimRoot_rdict.pcm
+  COPYONLY
+)
+
+# ROOT may still request the dictionary PCM by its original dictionary basename.
+configure_file(
+  ${PROJECT_SOURCE_DIR}/WCSimRootDict_rdict.pcm
+  ${PROJECT_BINARY_DIR}/WCSimRootDict_rdict.pcm
   COPYONLY
 )
 

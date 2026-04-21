@@ -155,10 +155,10 @@
 
    G4double m1 = G4IonTable::GetIonTable()->GetIonMass(static_cast<G4int>(nucleus->GetZ()),
  									       static_cast<G4int>(nucleus->GetA()));
-   G4double m2 = nucleus->GetZ() *  G4Proton::Proton()->GetPDGMass() + 
+   G4double mass2 = nucleus->GetZ() *  G4Proton::Proton()->GetPDGMass() + 
      (nucleus->GetA()- nucleus->GetZ())*G4Neutron::Neutron()->GetPDGMass();
 
-   G4double Mass = std::min(m1,m2);
+   G4double Mass = std::min(m1,mass2);
 
    G4double newExcitation = p4Nucleus.mag() - Mass - eGamma;
 
@@ -182,7 +182,8 @@
    return;
  }
 
-  void GdNeutronHPCaptureFS::Init(G4double A, G4double Z, G4int M, G4String & dirName, G4String & )
+  void GdNeutronHPCaptureFS::Init(G4double A, G4double Z, G4int M, G4String & dirName, G4String &,
+                                  G4ParticleDefinition*)
    {
      G4String tString = "/FS";
      G4bool dbool;

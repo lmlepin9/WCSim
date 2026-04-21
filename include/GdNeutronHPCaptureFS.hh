@@ -26,6 +26,7 @@
  #include "G4NeutronHPPhotonDist.hh"
  #include "G4Nucleus.hh"
  #include "G4Fragment.hh"
+ #include "G4ParticleDefinition.hh"
 
  #include "GdCaptureGammas.hh"
 
@@ -44,7 +45,8 @@
    }
 
    void   UpdateNucleus( const G4Fragment* , G4double );
-   void Init (G4double A, G4double Z, G4int M, G4String & dirName, G4String & aFSType);
+   void Init (G4double A, G4double Z, G4int M, G4String & dirName, G4String & aFSType,
+              G4ParticleDefinition* = nullptr) override;
    G4HadFinalState * ApplyYourself(const G4HadProjectile & theTrack);
    G4NeutronHPFinalState * New() 
    {

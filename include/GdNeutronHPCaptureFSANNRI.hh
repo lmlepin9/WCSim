@@ -27,6 +27,7 @@
 #include "G4NeutronHPPhotonDist.hh"
 #include "G4Nucleus.hh"
 #include "G4Fragment.hh"
+#include "G4ParticleDefinition.hh"
 
 //#include "GdCaptureGammas_ggarnet.hh"
 //#include "GdCaptureGammas_glg4sim.hh"
@@ -44,7 +45,8 @@ class GdNeutronHPCaptureFSANNRI : public G4NeutronHPFinalState
 		~GdNeutronHPCaptureFSANNRI();
 
 		void   UpdateNucleus( const G4Fragment* , G4double );
-		void Init (G4double A, G4double Z, G4int M, G4String & dirName, G4String & aFSType);
+		void Init (G4double A, G4double Z, G4int M, G4String & dirName, G4String & aFSType,
+		          G4ParticleDefinition* = nullptr) override;
 		G4HadFinalState * ApplyYourself(const G4HadProjectile & theTrack);
 		G4NeutronHPFinalState * New() 
 		{
@@ -59,8 +61,8 @@ class GdNeutronHPCaptureFSANNRI : public G4NeutronHPFinalState
 
 		G4int    Gd_CAPTURE; //1:natural , 2:enriched 157Gd, 3:enriched 155Gd
 		G4int    Gd_CASCADE; //1:discrete + continuum; 2:discrete, 3:continuum
-		G4String Gd157_ROOTFile="../WCSim/cont_dat/158GdContTbl__E1SLO4__HFB.root";
-		G4String Gd155_ROOTFile="../WCSim/cont_dat/156GdContTbl__E1SLO4__HFB.root";
+		G4String Gd157_ROOTFile=WCSIMDIR "/cont_dat/158GdContTbl__E1SLO4__HFB.root";
+		G4String Gd155_ROOTFile=WCSIMDIR "/cont_dat/156GdContTbl__E1SLO4__HFB.root";
 
 		G4Fragment * nucleus;
 

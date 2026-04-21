@@ -187,10 +187,10 @@ void GdNeutronHPCaptureFSANNRI::UpdateNucleus( const G4Fragment* gamma , G4doubl
 
 	//G4double m1 = G4ParticleTable::GetParticleTable()->GetIonTable()->GetIonMass(static_cast<G4int>(nucleus->GetZ()),
 	//static_cast<G4int>(nucleus->GetA()));
-	G4double m2 = nucleus->GetZ() *  G4Proton::Proton()->GetPDGMass() + 
+	G4double mass2 = nucleus->GetZ() *  G4Proton::Proton()->GetPDGMass() + 
 		(nucleus->GetA()- nucleus->GetZ())*G4Neutron::Neutron()->GetPDGMass();
 
-	G4double Mass = std::min(m1,m2);
+	G4double Mass = std::min(m1,mass2);
 
 	G4double newExcitation = p4Nucleus.mag() - Mass - eGamma;
 
@@ -216,7 +216,8 @@ void GdNeutronHPCaptureFSANNRI::UpdateNucleus( const G4Fragment* gamma , G4doubl
 //void GdNeutronHPCaptureFSANNRI::Init (G4double A, G4double Z, G4String & dirName, G4String & )
 #include <sstream> 
 //  void GdNeutronHPCaptureFSANNRI::Init (G4double A, G4double Z, G4int M, G4String & dirName, G4String & )
-void GdNeutronHPCaptureFSANNRI::Init (G4double A, G4double Z, G4int ,G4String & dirName, G4String & )
+void GdNeutronHPCaptureFSANNRI::Init (G4double A, G4double Z, G4int ,G4String & dirName, G4String &,
+                                      G4ParticleDefinition*)
 	///////////////////////////////////////////////////////////////////////////////////////////////////
 {
 	G4String tString = "/FS/";
