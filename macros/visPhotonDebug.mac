@@ -1,0 +1,37 @@
+# Optical-photon debugging view.
+# Keeps geometry fairly light and highlights optical photon tracks.
+#
+# Usage:
+#   1. Start WCSim interactively: ./WCSim
+#   2. At the Geant4 prompt: /control/execute macros/visPhotonDebug.mac
+#   3. Fire events with: /run/beamOn 1
+
+/run/verbose 0
+/tracking/verbose 0
+/hits/verbose 0
+/process/verbose 0
+
+/mygen/generator gun
+/gun/particle opticalphoton
+/gun/energy 3 eV
+/gun/direction 1 0 0
+/gun/position 0 0 0
+/gun/polarization 1 0 0
+
+/tracking/storeTrajectory 1
+
+/control/execute macros/visOGLSX.mac
+/vis/drawVolume
+/vis/scene/add/trajectories smooth
+/vis/modeling/trajectories/create/drawByParticleID
+/vis/modeling/trajectories/drawByParticleID-0/set opticalphoton blue
+/vis/modeling/trajectories/drawByParticleID-0/set gamma red
+/vis/scene/endOfEventAction accumulate
+
+# Make large detector structures easier to see through while debugging photons.
+/vis/geometry/set/colour WC -1 0.7 0.7 0.7 0.08
+/vis/geometry/set/colour WCBarrel -1 0.7 0.7 0.7 0.05
+/vis/geometry/set/colour WCBarrelCellBlackSheet -1 0.5 0.5 0.5 0.08
+/vis/geometry/set/colour WCCapBlackSheet -1 0.5 0.5 0.5 0.08
+/vis/viewer/zoom 1.6
+/vis/viewer/flush

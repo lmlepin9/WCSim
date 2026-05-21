@@ -1,0 +1,27 @@
+# Minimal interactive visualization setup.
+# Usage:
+#   1. Start WCSim interactively: ./WCSim
+#   2. At the Geant4 prompt: /control/execute macros/visInteractive.mac
+#   3. Fire events with: /run/beamOn 1
+
+/run/verbose 0
+/tracking/verbose 0
+/hits/verbose 0
+/process/verbose 0
+
+# Use a simple particle gun so interactive vis does not depend on beam files.
+/mygen/generator gun
+/gun/particle mu-
+/gun/energy 500 MeV
+/gun/direction 1 0 0
+/gun/position 0 0 0
+
+# Keep trajectories so events can be inspected in the viewer.
+/tracking/storeTrajectory 1
+
+/control/execute macros/visOGLSX.mac
+/vis/drawVolume
+/vis/scene/add/trajectories smooth
+/vis/modeling/trajectories/create/drawByParticleID
+/vis/scene/endOfEventAction accumulate
+/vis/viewer/flush
