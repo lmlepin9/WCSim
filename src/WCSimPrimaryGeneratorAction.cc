@@ -66,8 +66,10 @@ inline int   atoi( const string& s ) {return std::atoi( s.c_str() );}
 
 WCSimPrimaryGeneratorAction::WCSimPrimaryGeneratorAction(
 					  WCSimDetectorConstruction* myDC)
-  :myDetector(myDC), loadNewPrimaries(true), inputdata(0), primariesDirectory(""), neutrinosDirectory(""), vectorFileName(""),useAmBeRootInput(false),
-amBeInputFileName(""), amBePositionOffset(0.,0.,0.)
+  :myDetector(myDC), loadNewPrimaries(true), inputdata(0), metadata(0), geniedata(0),
+   primariesDirectory(""), neutrinosDirectory(""), vectorFileName(""),
+   useAmBeRootInput(false), amBeInputFileName(""), amBeReader(0),
+   amBePositionOffset(0.,0.,0.)
 {
   //T. Akiri: Initialize GPS to allow for the laser use 
   MyGPS = new G4GeneralParticleSource();
@@ -1036,14 +1038,24 @@ vector<string> tokenize( string separators, string input )
 
 void WCSimPrimaryGeneratorAction::LoadNewPrimaries(){
 	if(primariesDirectory==""){
-		G4cout<<"No primary files specified! Cannot generate beam events!"<<G4endl;
-		assert(false);
+		G4Exception("WCSimPrimaryGeneratorAction::LoadNewPrimaries",
+		            "WCSimBeam001",
+		            FatalException,
+		            "No primary files were specified for beam mode. Set /mygen/primariesdirectory to a valid ROOT file pattern first.");
 	}
 	//TODO: should also figure out how to check if loading the tchain is successful
 	G4cout<<"loading new primary TChain from: "<<primariesDirectory<<G4endl;
 	if(inputdata){ inputdata->ResetBranchAddresses(); delete inputdata; }
 	inputdata = new TChain("tankflux");	// input is name of tree in contributing files
-	inputdata->Add(primariesDirectory);
+	Int_t nPrimaryFiles = inputdata->Add(primariesDirectory);
+	if(nPrimaryFiles <= 0){
+		G4String message = "No ROOT files matched /mygen/primariesdirectory: ";
+		message += primariesDirectory;
+		G4Exception("WCSimPrimaryGeneratorAction::LoadNewPrimaries",
+		            "WCSimBeam002",
+		            FatalException,
+		            message);
+	}
 	inputdata->LoadTree(0);
 	if(metadata){ metadata->ResetBranchAddresses(); delete metadata; }
 	metadata = new TChain("tankmeta");
@@ -1052,7 +1064,15 @@ void WCSimPrimaryGeneratorAction::LoadNewPrimaries(){
 #ifndef NO_GENIE
 	if(geniedata){ geniedata->ResetBranchAddresses(); delete geniedata; }
 	geniedata = new TChain("gtree");
-	geniedata->Add(neutrinosDirectory);
+	Int_t nNeutrinoFiles = geniedata->Add(neutrinosDirectory);
+	if(nNeutrinoFiles <= 0){
+		G4String message = "No ROOT files matched /mygen/neutrinosdirectory: ";
+		message += neutrinosDirectory;
+		G4Exception("WCSimPrimaryGeneratorAction::LoadNewPrimaries",
+		            "WCSimBeam003",
+		            FatalException,
+		            message);
+	}
 	geniedata->LoadTree(0);
 #endif
 	

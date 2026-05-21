@@ -152,19 +152,19 @@
 
 ## Genie beam events
 ####################
-/mygen/generator beam	# retrieve input primaries from GENIE output files
+#/mygen/generator beam	# retrieve input primaries from GENIE output files
 
 ## Simple electron gun at WCSim origin using G4 Particle Gun
 #############################################################
 # Or you can use the G4 Particle Gun
 # for a full list of /gun/ commands see:
 # http://geant4.web.cern.ch/geant4/G4UsersDocuments/UsersGuides/ForApplicationDeveloper/html/Control/UIcommands/_gun_.html
-#/mygen/generator gun
-#/gun/particle e-
+/mygen/generator gun
+/gun/particle e-
 ##/gun/particle pi0
-#/gun/energy 500 MeV
-#/gun/direction 1 0 0 
-#/gun/position 0 0 0  
+/gun/energy 500 MeV
+/gun/direction 1 0 0 
+/gun/position 0 0 0  
 
 ## Simple electron gun at WCSim origin, using G4 GPS
 ####################################################

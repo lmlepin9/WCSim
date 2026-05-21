@@ -9,6 +9,11 @@ source /home/annie/Geant4/install/bin/geant4.sh
 source /home/annie/ROOT/install/bin/thisroot.sh
 source /home/annie/WCSim/WCSim/envHadronic.sh
 #export NO_GENIE=1 #ALLOWS WCSIM TO BE BUILT WITHOUT GENIE
-export PATH=${GENIE}/bin:/home/annie/lhapdf-5.9.1/install/bin:/home/annie/fsplit/:${PATH}
-export LD_LIBRARY_PATH=/home/annie/WCSim/WCSim:${GENIE}/lib:/home/annie/lhapdf-5.9.1/install/lib:/home/annie/Pythia6Support/v6_424/lib:/home/annie/log4cpp/install/lib:$LD_LIBRARY_PATH
+if [ -z "${NO_GENIE}" ]; then
+  export PATH=${GENIE}/bin:/home/annie/lhapdf-5.9.1/install/bin:/home/annie/fsplit/:${PATH}
+  export LD_LIBRARY_PATH=/home/annie/WCSim/WCSim:${GENIE}/lib:/home/annie/lhapdf-5.9.1/install/lib:/home/annie/Pythia6Support/v6_424/lib:/home/annie/log4cpp/install/lib:$LD_LIBRARY_PATH
+else
+  export PATH=/home/annie/fsplit/:${PATH}
+  export LD_LIBRARY_PATH=/home/annie/WCSim/WCSim:$LD_LIBRARY_PATH
+fi
 export ROOT_INCLUDE_PATH=/home/annie/WCSim/WCSim/include:$ROOT_INCLUDE_PATH

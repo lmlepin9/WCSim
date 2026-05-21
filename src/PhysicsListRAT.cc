@@ -78,7 +78,7 @@ void PhysicsListRAT::EnableThermalNeutronScattering() {
 
   // Exclude the thermal scattering region (below 4 eV) from the "regular"
   // elastic scattering model
-  n_elastic_hp->SetMinEnergy(4.*eV);
+  n_elastic_hp->SetMinEnergy(4.*CLHEP::eV);
 
   // Use the more detailed HP thermal scattering treatment below 4 eV instead
   n_elastic_process->RegisterMe(new G4NeutronHPThermalScattering);
@@ -137,9 +137,10 @@ void PhysicsListRAT::ConstructOpticalProcesses() {
   opBoundaryProcess->SetVerboseLevel(verboseLevel-1);
   rayleighProcess->SetVerboseLevel(verboseLevel-1);
   // Apply processes to all particles where applicable
-  theParticleIterator->reset();
-  while((*theParticleIterator)()) {
-    G4ParticleDefinition* particle = theParticleIterator->value();
+  auto particleIterator = GetParticleIterator();
+  particleIterator->reset();
+  while((*particleIterator)()) {
+    G4ParticleDefinition* particle = particleIterator->value();
     G4ProcessManager* pmanager = particle->GetProcessManager();
     G4String particleName = particle->GetParticleName();
     if (cerenkovProcess->IsApplicable(*particle)) {
@@ -157,9 +158,10 @@ void PhysicsListRAT::ConstructOpticalProcesses() {
 void PhysicsListRAT::AddParameterization() {
   G4FastSimulationManagerProcess* fastSimulationManagerProcess =
     new G4FastSimulationManagerProcess();
-  theParticleIterator->reset();
-  while((*theParticleIterator)()) {
-    G4ParticleDefinition* particle = theParticleIterator->value();
+  auto particleIterator = GetParticleIterator();
+  particleIterator->reset();
+  while((*particleIterator)()) {
+    G4ParticleDefinition* particle = particleIterator->value();
     G4ProcessManager* pmanager = particle->GetProcessManager();
     if (particle->GetParticleName() == "opticalphoton") {
       pmanager->AddProcess(fastSimulationManagerProcess, -1, -1, 1);
@@ -176,5 +178,4 @@ void PhysicsListRAT::SetCuts()
   SetCutValue(1*mm,"e+");
   */
 }
-
 

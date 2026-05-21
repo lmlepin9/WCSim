@@ -1,8 +1,7 @@
 #include "G4ios.hh"
 #include "G4RunManager.hh"
 #include "G4UImanager.hh"
-#include "G4UIterminal.hh"
-#include "G4UItcsh.hh"
+#include "G4UIExecutive.hh"
 #include "WCSimDetectorConstruction.hh"
 #include "WCSimPhysicsListFactory.hh"
 #include "WCSimPhysicsListFactoryMessenger.hh"
@@ -15,7 +14,9 @@
 #include "WCSimTrackingAction.hh"
 #include "WCSimSteppingAction.hh"
 #include "WCSimVisManager.hh"
+#if defined(G4VIS_USE) || defined(G4VIS_USE_OPENGL) || defined(G4VIS_USE_OPENGLX) || defined(G4VIS_USE_OPENGLQT)
 #include "G4VisExecutive.hh"
+#endif
 #include "WCSimRandomParameters.hh"
 #include <unistd.h>
 
@@ -66,7 +67,7 @@ int main(int argc,char** argv)
   // Initialize the physics factory to register the selected physics.
   physFactory->InitializeList();
   runManager->SetUserInitialization(physFactory);
-#ifdef G4VIS_USE
+#if defined(G4VIS_USE) || defined(G4VIS_USE_OPENGL) || defined(G4VIS_USE_OPENGLX) || defined(G4VIS_USE_OPENGLQT)
   // Visualization
   G4cout<<"Creating visualisation manager"<<G4endl;
   //G4VisManager* visManager = new WCSimVisManager;
@@ -109,11 +110,11 @@ int main(int argc,char** argv)
   { 
 
     // Start UI Session
-    G4UIsession* session =  new G4UIterminal(new G4UItcsh);
+    G4UIExecutive* session = new G4UIExecutive(argc, argv);
 
     G4cout<<"Executing WCSim.mac"<<G4endl;
     // Visualization Macro
-    UI->ApplyCommand("/control/execute WCSim.mac");
+    UI->ApplyCommand("/control/execute ./macros/visQtEventDisplay.mac");
 
     G4cout<<"Starting session"<<G4endl;
     // Start Interactive Mode
@@ -129,11 +130,9 @@ int main(int argc,char** argv)
     UI->ApplyCommand(command+fileName);
   }
 
-#ifdef G4VIS_USE
+#if defined(G4VIS_USE) || defined(G4VIS_USE_OPENGL) || defined(G4VIS_USE_OPENGLX) || defined(G4VIS_USE_OPENGLQT)
   delete visManager;
 #endif
   delete runManager;
   return 0;
 }
-
-

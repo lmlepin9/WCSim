@@ -145,7 +145,9 @@ private:
 	Char_t nupvval[100];
 	Char_t numatval[100];
 	Char_t nufluxfilenameval[100];
+#ifndef NO_GENIE
 	genie::NtpMCEventRecord* genierecordval;
+#endif
 	
 	G4String primariesDirectory;
 	G4String neutrinosDirectory;
@@ -202,10 +204,11 @@ public:
   void SetPrimariesOffset(G4int offset){ primariesoffset=offset; }
   inline G4bool IsGeneratingVertexInRock() { return GenerateVertexInRock; }
   inline void SetGenerateVertexInRock(G4bool choice) { GenerateVertexInRock = choice; }
+#ifndef NO_GENIE
   genie::NtpMCEventRecord* GetGenieRecord() { return genierecordval; }
+#endif
 
 };
 
 #endif
-
 
