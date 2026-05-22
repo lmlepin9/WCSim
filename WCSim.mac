@@ -159,12 +159,12 @@
 # Or you can use the G4 Particle Gun
 # for a full list of /gun/ commands see:
 # http://geant4.web.cern.ch/geant4/G4UsersDocuments/UsersGuides/ForApplicationDeveloper/html/Control/UIcommands/_gun_.html
-/mygen/generator gun
-/gun/particle e-
-##/gun/particle pi0
-/gun/energy 500 MeV
-/gun/direction 1 0 0 
-/gun/position 0 0 0  
+#/mygen/generator gun
+#/gun/particle e-
+#/gun/particle pi0
+#/gun/energy 500 MeV
+#/gun/direction 1 0 0 
+#/gun/position 0 0 0  
 
 ## Simple electron gun at WCSim origin, using G4 GPS
 ####################################################
@@ -215,12 +215,12 @@
 ## Simulating CC1Pi events
 ###################################################
 ## Use a muon gun for testing scintillator elements
-#/mygen/generator gps
-#/gps/source/intensity 1
-#/gps/particle mu-
-#/gps/energy 500 MeV
-#/gps/direction 0 0 1
-#/gps/pos/centre 0 -14.46 168.1 cm
+/mygen/generator gps
+/gps/source/intensity 1
+/gps/particle mu-
+/gps/energy 500 MeV
+/gps/ang/type iso
+/gps/pos/centre 0 -14.46 168.1 cm
 #/gps/source/add 1
 #/gps/particle pi+
 #/gps/energy 200 MeV
