@@ -82,6 +82,14 @@ Useful cmake commands:
 * make edit_cache : customize the build.
 * make rebuild_cache : redo the cmake phase.
 
+Macro initialization order:
+* WCSim applies `macros/preinit_geometry.mac` before `runManager->Initialize()`.
+  Put detector-construction options that must affect the first geometry build
+  there, for example `/WCSim/AmBe/add true`.
+* The main run macro, such as `WCSim.mac`, is executed after the G4 kernel has
+  already been initialized. Geometry changes made there require an explicit
+  `/WCSim/Construct`, which rebuilds the geometry.
+
 
 
 ## Color Convention for visualization used in WCSimVismanager.cc
