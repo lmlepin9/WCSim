@@ -26,12 +26,9 @@ You can follow issues/requests etc by watching the GitHub respository.
 Build Instructions:
 
 You should have working installations of ROOT and Geant4, including the Geant4
-data files such as the hadronic cross-section data.  This branch is currently
-being built and tested with the local `setup_env edep-sim` environment defined
-in `/home/lmlepin/.bashrc`, which sources
-`/home/lmlepin/edepsim_workdir/configure_dependencies_local.sh`.
+data files such as the hadronic cross-section data.
 
-Current local build environment:
+Known working software versions:
 * ROOT 6.30.06
 * Geant4 10.7.4
 * CMake 3.22.1
