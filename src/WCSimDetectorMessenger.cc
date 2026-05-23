@@ -21,6 +21,11 @@ WCSimDetectorMessenger::WCSimDetectorMessenger(WCSimDetectorConstruction* WCSimD
   AddAmBeHousing->SetParameterName("AddAmBeHousing", false);
   AddAmBeHousing->AvailableForStates(G4State_PreInit, G4State_Idle);
 
+  AmBeHousingGDMLPath = new G4UIcmdWithAString("/WCSim/AmBe/gdmlPath", this);
+  AmBeHousingGDMLPath->SetGuidance("Set the GDML file path used for the AmBe housing.");
+  AmBeHousingGDMLPath->SetParameterName("AmBeHousingGDMLPath", false);
+  AmBeHousingGDMLPath->AvailableForStates(G4State_PreInit, G4State_Idle);
+
   AmBeHousingCenter = new G4UIcmdWith3VectorAndUnit("/WCSim/AmBe/center", this);
   AmBeHousingCenter->SetGuidance("Set the AmBe housing center in tank coordinates.");
   AmBeHousingCenter->SetParameterName("X", "Y", "Z", false);
@@ -230,6 +235,7 @@ WCSimDetectorMessenger::~WCSimDetectorMessenger()
   
   delete WCConstruct;
   delete AddAmBeHousing;
+  delete AmBeHousingGDMLPath;
   delete AmBeHousingCenter;
 }
 
@@ -289,6 +295,11 @@ void WCSimDetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 
 	if(command == AddAmBeHousing){
 		WCSimDetector->SetAddAmBeHousing(AddAmBeHousing->GetNewBoolValue(newValue));
+	}
+
+	if(command == AmBeHousingGDMLPath){
+		WCSimDetector->SetAmBeHousingGDMLPath(newValue);
+		G4cout << "Set AmBe housing GDML path to " << newValue << G4endl;
 	}
 
 	if(command == AmBeHousingCenter){

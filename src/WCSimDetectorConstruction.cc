@@ -36,11 +36,6 @@ hash_map<std::string, int, hash<std::string> > WCSimDetectorConstruction::mrdtub
 hash_map<std::string, int, hash<std::string> > WCSimDetectorConstruction::facctubeLocationMap;
 hash_map<std::string, int, hash<std::string> > WCSimDetectorConstruction::lappdLocationMap;
 
-namespace {
-  const G4String kAmBeHousingGDML =
-    "/home/lmlepin/AmBeTrigSim/AmBeHousing.gdml";
-}
-
 WCSimDetectorConstruction::WCSimDetectorConstruction(G4int DetConfig,WCSimTuningParameters* WCSimTuningPars):WCSimTuningParams(WCSimTuningPars), noRot(0), rotatedmatx(0), upmtx(0), downmtx(0), rightmtx(0), leftmtx(0), scintSurface_op(0), MPTmylarSurface(0), lgSurface_op(0), lgsurf_MPT(0)
 {
 
@@ -56,7 +51,8 @@ WCSimDetectorConstruction::WCSimDetectorConstruction(G4int DetConfig,WCSimTuning
 
   // --- AmBe housing ----------
   addAmBeHousing = false;
-  amBeHousingCenter = G4ThreeVector(0.*cm, -14.46*cm, 168.1*cm);
+  amBeHousingGDMLPath = "AmBeHousing.gdml";
+  amBeHousingCenter = G4ThreeVector(0.*cm, 0.*cm, 0.*cm);
 
   myConfiguration = DetConfig;
 
@@ -140,12 +136,12 @@ void WCSimDetectorConstruction::PlaceAmBeHousing(G4LogicalVolume* motherLog)
 
   G4GDMLParser parser;
   parser.SetOverlapCheck(true);
-  parser.Read(kAmBeHousingGDML, false);
+  parser.Read(amBeHousingGDMLPath, false);
 
   G4VPhysicalVolume* gdmlWorldPhys = parser.GetWorldVolume();
   if(!gdmlWorldPhys){
     G4cerr << "WCSimDetectorConstruction::PlaceAmBeHousing(): failed to read "
-           << kAmBeHousingGDML << G4endl;
+           << amBeHousingGDMLPath << G4endl;
     return;
   }
 
@@ -161,7 +157,7 @@ void WCSimDetectorConstruction::PlaceAmBeHousing(G4LogicalVolume* motherLog)
 
   if(!ambeHousingLog){
     G4cerr << "WCSimDetectorConstruction::PlaceAmBeHousing(): could not find "
-           << "the AmBeHousing physical volume in " << kAmBeHousingGDML
+           << "the AmBeHousing physical volume in " << amBeHousingGDMLPath
            << G4endl;
     return;
   }
@@ -179,7 +175,7 @@ void WCSimDetectorConstruction::PlaceAmBeHousing(G4LogicalVolume* motherLog)
                     0,
                     true);
 
-  G4cout << "[DEBUG] Placed AmBe housing from " << kAmBeHousingGDML
+  G4cout << "[DEBUG] Placed AmBe housing from " << amBeHousingGDMLPath
          << " at tank coordinates " << amBeHousingCenter/cm
          << " cm with native GDML orientation" << G4endl;
 }

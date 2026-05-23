@@ -104,10 +104,14 @@ ANNIE detector component selection:
 ```
 /WCSim/ANNIE/DetectorComponents tank
 /WCSim/AmBe/add true
+/WCSim/AmBe/gdmlPath AmBeHousing.gdml
 /WCSim/AmBe/center 0 0 0 cm
 ```
 
 AmBe housing coordinates:
+* `/WCSim/AmBe/gdmlPath` sets the GDML file used for the AmBe housing. The
+  default is `AmBeHousing.gdml`, which is kept in the repository root. If WCSim
+  is launched from the `build` directory, use `../AmBeHousing.gdml`.
 * `/WCSim/AmBe/center` is interpreted in the local ANNIE tank water volume
   coordinate system, because the AmBe housing is placed inside `WCBarrel`.
   In this coordinate system, the tank center is `(0, 0, 0) cm`.
