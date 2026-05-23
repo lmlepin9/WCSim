@@ -22,6 +22,7 @@
 #include "WCSimLAPPDInfo.hh"
 #include "WCSimLAPPDObject.hh"
 
+#include <chrono>
 #include <vector>
 
 int pawc_[500000];                // Declare the PAWC common
@@ -49,6 +50,7 @@ WCSimRunAction::~WCSimRunAction()
 
 void WCSimRunAction::BeginOfRunAction(const G4Run* aRun)
 {
+  runStartTime = std::chrono::steady_clock::now();
   G4cout << "### Run " << aRun->GetRunID() << " start." << G4endl;
   numberOfEventsGenerated = 0;
   numberOfTimesWaterTubeHit = 0;
@@ -123,6 +125,15 @@ void WCSimRunAction::CreateNewOutputFile(){
 
 void WCSimRunAction::EndOfRunAction(const G4Run* aRun)
 {
+  const auto runEndTime = std::chrono::steady_clock::now();
+  const std::chrono::duration<double> elapsed = runEndTime - runStartTime;
+  const G4int numberOfEvents = aRun->GetNumberOfEvent();
+  G4cout << "### Run " << aRun->GetRunID() << " wall time: "
+         << elapsed.count() << " s";
+  if (numberOfEvents > 0 && elapsed.count() > 0.) {
+    G4cout << " (" << numberOfEvents / elapsed.count() << " events/s)";
+  }
+  G4cout << G4endl;
   G4cout << "### Run " << aRun->GetRunID() << " end." << G4endl;
 //G4cout << "Number of Events Generated: "<< numberOfEventsGenerated << G4endl;
 //G4cout << "Number of times MRD hit: " << numberOfTimesMRDHit << G4endl;

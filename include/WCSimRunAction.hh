@@ -13,6 +13,8 @@
 #include "WCSimDetectorConstruction.hh"
 #include "WCSimRandomParameters.hh"
 
+#include <chrono>
+
 class G4Run;
 class WCSimRunActionMessenger;
 
@@ -87,6 +89,7 @@ private:
   WCSimRootOptions* wcsimrootoptions;
   WCSimDetectorConstruction* wcsimdetector;
   WCSimRandomParameters* wcsimrandomparameters;
+  std::chrono::steady_clock::time_point runStartTime;
 
   int numberOfEventsGenerated;
   int numberOfTimesWaterTubeHit;
