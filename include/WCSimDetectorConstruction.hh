@@ -426,6 +426,8 @@ private:
 
   //--------- AmBe housing placeholder ----------------------
   G4bool addAmBeHousing;
+  G4String amBeHousingGDMLPath;
+  G4ThreeVector amBeHousingCenter;
 
 
 
@@ -675,6 +677,11 @@ private:
   // ---------- AmBe housing ------------
   void SetAddAmBeHousing(G4bool val){addAmBeHousing = val;}
   G4bool GetAddAmBeHousing() const {return addAmBeHousing;}
+  void SetAmBeHousingGDMLPath(const G4String& val){amBeHousingGDMLPath = val;}
+  G4String GetAmBeHousingGDMLPath() const {return amBeHousingGDMLPath;}
+  void SetAmBeHousingCenter(const G4ThreeVector& val){amBeHousingCenter = val;}
+  G4ThreeVector GetAmBeHousingCenter() const {return amBeHousingCenter;}
+  void PlaceAmBeHousing(G4LogicalVolume* motherLog);
 
 
 //  private:

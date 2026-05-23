@@ -90,6 +90,35 @@ Macro initialization order:
   already been initialized. Geometry changes made there require an explicit
   `/WCSim/Construct`, which rebuilds the geometry.
 
+ANNIE detector component selection:
+* The ANNIE tank, MRD, and FMV/FACC/veto geometry can be selected with
+  `/WCSim/ANNIE/DetectorComponents`.
+* Accepted values are `all`, `tank`, `mrd`, `fmv`, `facc`, `veto`, `annie`,
+  and `wc`. The values `fmv`, `facc`, and `veto` select the same front veto
+  geometry; `annie` and `wc` are aliases for `tank`.
+* Components can be combined with commas or spaces, for example
+  `/WCSim/ANNIE/DetectorComponents tank,mrd`.
+* This command should be placed in `macros/preinit_geometry.mac` if it should
+  affect the first geometry construction. For example:
+
+```
+/WCSim/ANNIE/DetectorComponents tank
+/WCSim/AmBe/add true
+/WCSim/AmBe/gdmlPath AmBeHousing.gdml
+/WCSim/AmBe/center 0 0 0 cm
+```
+
+AmBe housing coordinates:
+* `/WCSim/AmBe/gdmlPath` sets the GDML file used for the AmBe housing. The
+  default is `AmBeHousing.gdml`, which is kept in the repository root. If WCSim
+  is launched from the `build` directory, use `../AmBeHousing.gdml`.
+* `/WCSim/AmBe/center` is interpreted in the local ANNIE tank water volume
+  coordinate system, because the AmBe housing is placed inside `WCBarrel`.
+  In this coordinate system, the tank center is `(0, 0, 0) cm`.
+* The same tank center is at `(0, -14.464875, 168.1) cm` in the global WCSim
+  experimental hall coordinate system. This comes from the ANNIE tank placement
+  `(0, -tankyoffset, tankouterRadius + tankzoffset)`.
+
 
 
 ## Color Convention for visualization used in WCSimVismanager.cc

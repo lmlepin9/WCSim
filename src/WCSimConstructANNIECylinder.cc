@@ -114,6 +114,7 @@ G4LogicalVolume* WCSimDetectorConstruction::ConstructANNIECylinder()
 						  logicWC,
 						  false,
 						  0);
+	PlaceAmBeHousing(logicWCBarrel);
 	
 	// This volume needs to made invisible to view the blacksheet and PMTs with RayTracer
 	if (Vis_Choice == "RayTracer"){
@@ -591,5 +592,4 @@ void WCSimDetectorConstruction::ConstructANNIECaps(G4int zflip)
 	}
 	
 }
-
 
