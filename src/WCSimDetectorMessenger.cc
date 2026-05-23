@@ -13,6 +13,10 @@ WCSimDetectorMessenger::WCSimDetectorMessenger(WCSimDetectorConstruction* WCSimD
   WCSimDir = new G4UIdirectory("/WCSim/");
   WCSimDir->SetGuidance("Commands to change the geometry of the simulation");
 
+  AddAmBeHousing = new G4UIcmdWithABool("/WCSim/AmBe/add", this);
+  AddAmBeHousing->SetGuidance("Add AmBe housing to the tank geometry");
+  AddAmBeHousing->SetParameterName("AddAmBeHousing", false);
+  AddAmBeHousing->AvailableForStates(G4State_PreInit, G4State_Idle);
 
   PMTConfig = new G4UIcmdWithAString("/WCSim/WCgeom",this);
   PMTConfig->SetGuidance("Set the geometry configuration for the WC.");
@@ -93,6 +97,13 @@ WCSimDetectorMessenger::WCSimDetectorMessenger(WCSimDetectorConstruction* WCSimD
   SaveCapture->SetParameterName("SaveCapture",false);
   SaveCapture->SetCandidates("true false");
   SaveCapture->AvailableForStates(G4State_PreInit, G4State_Idle);
+
+  ANNIEComponents = new G4UIcmdWithAString("/WCSim/ANNIE/DetectorComponents", this);
+  ANNIEComponents->SetGuidance("Select which ANNIE detector components to construct.");
+  ANNIEComponents->SetGuidance("Use all, tank, mrd, fmv/facc/veto, or a comma/space separated list such as tank,mrd.");
+  ANNIEComponents->SetParameterName("ANNIEComponents", false);
+  ANNIEComponents->SetDefaultValue("all");
+  ANNIEComponents->AvailableForStates(G4State_PreInit, G4State_Idle);
   
   
   PMTQEMethod = new G4UIcmdWithAString("/WCSim/PMTQEMethod", this);
@@ -197,6 +208,7 @@ WCSimDetectorMessenger::~WCSimDetectorMessenger()
   delete PMTConfig;
   delete SavePi0;
   delete SaveCapture;
+  delete ANNIEComponents;
   delete PMTQEMethod;
   delete LAPPDQEMethod;
   delete PMTCollEff;
@@ -208,6 +220,7 @@ WCSimDetectorMessenger::~WCSimDetectorMessenger()
   delete WCSimDir;
   
   delete WCConstruct;
+  delete AddAmBeHousing;
 }
 
 void WCSimDetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
@@ -263,6 +276,10 @@ void WCSimDetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 		  G4cout << "That geometry choice not defined!" << G4endl;
 		}
 	}
+
+	if(command == AddAmBeHousing){
+		WCSimDetector->SetAddAmBeHousing(AddAmBeHousing->GetNewBoolValue(newValue));
+	}
   
 	if (command == SavePi0){
 	  G4cout << "Set the flag for saving pi0 info " << newValue << G4endl;
@@ -284,6 +301,10 @@ void WCSimDetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 	  }else{
 	    
 	  }
+	}
+
+	if (command == ANNIEComponents){
+	  WCSimDetector->SetANNIEDetectorComponents(newValue);
 	}
 
 	if (command == PMTQEMethod){

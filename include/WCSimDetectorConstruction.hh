@@ -101,12 +101,16 @@ public:
   void SetANNIEPhase2Geometryv7(); // phase 2 geometry - read PMT positions from scan file
   
   G4int    GetTotalNumPmts(G4String key){
+    if(!constructtank) return 0;
     if(std::find(WCTankCollectionNames.begin(), WCTankCollectionNames.end(), key)!=WCTankCollectionNames.end())
       return GetTubesInCollection(key).size();
     return -1;                                                                              // ✩
   }
   G4String GetTubeCollection(Int_t tubeID){return WCTubeCollectionMap.at(tubeID);}          // ✩
-  std::vector<G4String> GetIDCollectionNames(){return WCTankCollectionNames;}               // ✩
+  std::vector<G4String> GetIDCollectionNames(){                                             // ✩
+    if(!constructtank) return std::vector<G4String>{};
+    return WCTankCollectionNames;
+  }
   std::vector<Int_t> GetTubesInCollection(G4String CollectionName){                         // ✩
     if(TubeIdsByCollection.count(CollectionName)==0){
       G4cerr<<"WCSimDetectorConstruction::GetTubesInCollection could not find collection "
@@ -128,6 +132,10 @@ public:
   G4int    GetTotalNumMrdPmts() {return totalNumMrdPMTs;}
   G4int    GetTotalNumFaccPmts() {return totalNumFaccPMTs;}
   G4int    GetTotalNumLAPPDs() {return totalNumLAPPDs;}
+  G4bool   GetConstructTank() {return constructtank;}
+  G4bool   GetConstructMRD() {return constructmrd;}
+  G4bool   GetConstructFACC() {return constructveto;}
+  void     SetANNIEDetectorComponents(G4String componentList);
   
   G4int    GetPMT_QE_Method(){return PMT_QE_Method;}
   G4double GetwaterTank_Length() {return waterTank_Length;} 
@@ -416,6 +424,11 @@ private:
 
   // WC geometry parameters
 
+  //--------- AmBe housing placeholder ----------------------
+  G4bool addAmBeHousing;
+
+
+
   G4double WCPMTRadius;       // ⚠
   G4double WCPMTExposeHeight; // ⚠
   G4double WCBarrelPMTOffset;
@@ -489,8 +502,10 @@ private:
   G4double WCCapPMTOffset;           // offset of the cap PMTs toward the centre of the tank.
   G4double WCBorderBarrelTopPMTOffset; // more fudging for ANNIE
   G4int numhatchpmts;
+  G4bool constructtank;
   G4bool constructmrd;
   G4bool constructveto;
+  G4bool worldExtentConfigured;
   G4double compressionfactor;        // ratio to squeeze PMTs together on an octagon face, relative to full width
   G4double capcompressionratio;      // aspect ratio of PMT spacing on bottom cap
   G4double capcentrebarwidth;        // cap PMT offset due to width of central bar
@@ -656,6 +671,12 @@ private:
   G4String GetMRDCollectionName(){return WCMRDCollectionName;}
   G4String GetFACCCollectionName(){return WCFACCCollectionName;}
   G4bool GetIsANNIE(){return isANNIE;}
+
+  // ---------- AmBe housing ------------
+  void SetAddAmBeHousing(G4bool val){addAmBeHousing = val;}
+  G4bool GetAddAmBeHousing() const {return addAmBeHousing;}
+
+
 //  private:
 
   G4bool isANNIE;
@@ -855,6 +876,8 @@ private:
   // ====================================================
   
   public:
+
+
     // ****************SciBooNE integration
     int startindex;
     G4bool useadditionaloffset;
@@ -921,4 +944,3 @@ private:
 };
 
 #endif
-

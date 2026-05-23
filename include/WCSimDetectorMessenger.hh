@@ -20,15 +20,15 @@ class WCSimDetectorMessenger: public G4UImessenger
  public:
   WCSimDetectorMessenger(WCSimDetectorConstruction* mpga);
   ~WCSimDetectorMessenger();
-  
+
  public:
   void         SetNewValue(G4UIcommand* command, G4String newValues);
- 
+
  private:
   WCSimDetectorConstruction* WCSimDetector;
 
  private: //commands
-  
+
   G4UIdirectory*      WCSimDir;
   G4UIcmdWithAString* PMTConfig;
   G4UIcmdWithAString* WCVisChoice;
@@ -43,6 +43,7 @@ class WCSimDetectorMessenger: public G4UImessenger
   G4UIcmdWithADouble* cylinderTank_Coverage;
   G4UIcmdWithAString* cylinderTank_PMTType;
   G4UIcmdWithAString* SaveCapture;
+  G4UIcmdWithAString* ANNIEComponents;
 
 
   G4UIcmdWithAString* tubeCmd;
@@ -52,8 +53,9 @@ class WCSimDetectorMessenger: public G4UImessenger
   G4UIcmdWithAString* distortionCmd;
   G4UIcmdWithoutParameter* WCConstruct;
 
+  G4UIcmdWithABool* AddAmBeHousing;
+
 };
 
 #endif
-
 

@@ -22,6 +22,10 @@
 #include "G4SystemOfUnits.hh"
 #include "G4GeometryTolerance.hh"
 
+#include <algorithm>
+#include <cctype>
+#include <sstream>
+
 std::map<int, G4Transform3D> WCSimDetectorConstruction::tubeIDMap;
 std::map<int, G4Transform3D> WCSimDetectorConstruction::mrdtubeIDMap;
 std::map<int, G4Transform3D> WCSimDetectorConstruction::facctubeIDMap;
@@ -34,19 +38,27 @@ hash_map<std::string, int, hash<std::string> > WCSimDetectorConstruction::lappdL
 
 WCSimDetectorConstruction::WCSimDetectorConstruction(G4int DetConfig,WCSimTuningParameters* WCSimTuningPars):WCSimTuningParams(WCSimTuningPars), noRot(0), rotatedmatx(0), upmtx(0), downmtx(0), rightmtx(0), leftmtx(0), scintSurface_op(0), MPTmylarSurface(0), lgSurface_op(0), lgsurf_MPT(0)
 {
-	
+
   // Decide if (only for the case of !1kT detector) should be upright or horizontal
   isUpright = false;
   isEggShapedHyperK  = false;
+  constructtank = true;
+  constructmrd = true;
+  constructveto = true;
+  worldExtentConfigured = false;
 
   debugMode = false;
 
+  // --- AmBe housing ----------
+  addAmBeHousing = false;
+
   myConfiguration = DetConfig;
+
 
   //-----------------------------------------------------
   // Create Materials
   //-----------------------------------------------------
-    
+
   ConstructMaterials();
 
   //-----------------------------------------------------
@@ -85,18 +97,18 @@ WCSimDetectorConstruction::WCSimDetectorConstruction(G4int DetConfig,WCSimTuning
   //SetANNIEPhase2Geometryv6();
   SetANNIEPhase2Geometryv7();
 
-  //----------------------------------------------------- 
+  //-----------------------------------------------------
   // Set whether or not Pi0-specific info is saved
   //-----------------------------------------------------
 
   SavePi0Info(false);
-  
+
   //-----------------------------------------------------
   // Set whether or not neutron capture info is saved
   //-----------------------------------------------------
 
   SaveCaptureInfo(true);
-  
+
   //-----------------------------------------------------
   // Set the default method for implementing the PMT QE
   //-----------------------------------------------------
@@ -109,11 +121,67 @@ WCSimDetectorConstruction::WCSimDetectorConstruction(G4int DetConfig,WCSimTuning
   // set default visualizer to OGLSX
   SetVis_Choice("OGLSX");
 
-  //----------------------------------------------------- 
+  //-----------------------------------------------------
   // Make the detector messenger to allow changing geometry
   //-----------------------------------------------------
 
   messenger = new WCSimDetectorMessenger(this);
+}
+
+void WCSimDetectorConstruction::SetANNIEDetectorComponents(G4String componentList)
+{
+  std::string requested = componentList;
+  std::replace(requested.begin(), requested.end(), ',', ' ');
+  std::replace(requested.begin(), requested.end(), ';', ' ');
+  std::replace(requested.begin(), requested.end(), '+', ' ');
+  std::transform(requested.begin(), requested.end(), requested.begin(),
+                 [](unsigned char c){ return std::tolower(c); });
+
+  std::istringstream tokens(requested);
+  std::string token;
+  G4bool newConstructTank = false;
+  G4bool newConstructMRD = false;
+  G4bool newConstructVeto = false;
+  G4bool sawToken = false;
+
+  while(tokens >> token){
+    sawToken = true;
+    if(token == "all"){
+      newConstructTank = true;
+      newConstructMRD = true;
+      newConstructVeto = true;
+    } else if(token == "none"){
+      newConstructTank = false;
+      newConstructMRD = false;
+      newConstructVeto = false;
+    } else if(token == "tank" || token == "annie" || token == "wc"){
+      newConstructTank = true;
+    } else if(token == "mrd"){
+      newConstructMRD = true;
+    } else if(token == "fmv" || token == "facc" || token == "veto"){
+      newConstructVeto = true;
+    } else {
+      G4cerr << "Unknown ANNIE detector component '" << token
+             << "'. Valid components are all, tank, mrd, and fmv/facc/veto. "
+             << "Keeping previous component selection." << G4endl;
+      return;
+    }
+  }
+
+  if(!sawToken){
+    G4cerr << "Empty ANNIE detector component list. Keeping previous component selection." << G4endl;
+    return;
+  }
+
+  constructtank = newConstructTank;
+  constructmrd = newConstructMRD;
+  constructveto = newConstructVeto;
+
+  G4cout << "ANNIE detector components enabled: tank="
+         << (constructtank ? "true" : "false")
+         << " mrd=" << (constructmrd ? "true" : "false")
+         << " fmv=" << (constructveto ? "true" : "false")
+         << G4endl;
 }
 
 #include "G4GeometryManager.hh"
@@ -122,11 +190,11 @@ WCSimDetectorConstruction::WCSimDetectorConstruction(G4int DetConfig,WCSimTuning
 
 void WCSimDetectorConstruction::UpdateGeometry()
 {
- 
-  
+
+
   G4bool geomChanged = true;
   G4RunManager::GetRunManager()->DefineWorldVolume(Construct(), geomChanged);
- 
+
  }
 
 
@@ -148,8 +216,8 @@ WCSimDetectorConstruction::~WCSimDetectorConstruction(){
     delete flappds.at(i);
   }
   flappds.clear();
-  
-  // MRD objects... 
+
+  // MRD objects...
   // rotation matrices
   if(noRot) delete noRot;
   if(rotatedmatx) delete rotatedmatx;
@@ -157,41 +225,48 @@ WCSimDetectorConstruction::~WCSimDetectorConstruction(){
   if(downmtx) delete downmtx;
   if(rightmtx) delete rightmtx;
   if(leftmtx) delete leftmtx;
-  
+
   // optical surfaces and materials properties tables
   if(scintSurface_op) delete scintSurface_op;
   if(MPTmylarSurface) delete MPTmylarSurface;
   if(lgSurface_op) delete lgSurface_op;
   if(lgsurf_MPT) delete lgsurf_MPT;
-  
+
   // logical border surfaces
   for(auto surface : bordersurfaces){
     delete surface;
   }
   bordersurfaces.clear();
-  
+
   // visualisation attributes
     for(auto visatt : mrdvisattributes){
     delete visatt;
   }
   mrdvisattributes.clear();
-  
+
 }
 
 G4VPhysicalVolume* WCSimDetectorConstruction::Construct()
-{  
+{
   G4GeometryManager::GetInstance()->OpenGeometry();
-  // having issues with StepTooSmall not being set - step sizes are ~1e-9, which *is* larger 
+  // having issues with StepTooSmall not being set - step sizes are ~1e-9, which *is* larger
   // than the kCarTolerance/2 (5e-10m), but StepTooSmall isn't set for some reason...
-  // Try calling SetWorldMaximumExtent to have it calculated from World size. 
+  // Try calling SetWorldMaximumExtent to have it calculated from World size.
   // This value must be setBEFORE ANY GEOMETRY is instantiated.
   // Seems to work - kCarTolerance is now much smaller, no more errors.
-  if(isANNIE){
+  if(isANNIE && !worldExtentConfigured){
     // let's try setting the tolerance to try to get rid of geometry errors
     // this takes the world extent - set in WCSimDetectorConstruction as expHallLength
     G4GeometryManager::GetInstance()->SetWorldMaximumExtent(3.*WCLength);
+    worldExtentConfigured = true;
     G4cout << "Computed tolerance = "
            << G4GeometryTolerance::GetInstance()->GetSurfaceTolerance()/mm << " mm" << G4endl;
+  }
+
+
+  //--------------- AmBe housing debug -------------
+  if(addAmBeHousing){
+    G4cout << "[DEBUG]---------- AmBe housing construction enabled !!!--------------- " << G4endl;
   }
 
   G4PhysicalVolumeStore::GetInstance()->Clean();
@@ -205,13 +280,13 @@ G4VPhysicalVolume* WCSimDetectorConstruction::Construct()
   totalNumPMTs = 0;
   totalNumMrdPMTs = 0;
   totalNumFaccPMTs = 0;
-  totalNumLAPPDs = 0;  
-  
+  totalNumLAPPDs = 0;
+
   //-----------------------------------------------------
   // Create Logical Volumes
   //-----------------------------------------------------
 
-  // First create the logical volumes of the sub detectors.  After they are 
+  // First create the logical volumes of the sub detectors.  After they are
   // created their size will be used to make the world volume.
   // Note the order is important because they rearrange themselves depending
   // on their size and detector ordering.
@@ -225,7 +300,7 @@ G4VPhysicalVolume* WCSimDetectorConstruction::Construct()
 
   //-------------------------------
 
-  // Now make the detector Hall.  The lengths of the subdectors 
+  // Now make the detector Hall.  The lengths of the subdectors
   // were set above.
 
   G4double expHallLength = 3.*WCLength; //jl145 - extra space to simulate cosmic muons more easily
@@ -237,8 +312,8 @@ G4VPhysicalVolume* WCSimDetectorConstruction::Construct()
 				  expHallHalfLength,
 				  expHallHalfLength,
 				  expHallHalfLength);
-  
-  G4LogicalVolume* logicExpHall = 
+
+  G4LogicalVolume* logicExpHall =
     new G4LogicalVolume(solidExpHall,
 			G4Material::GetMaterial("Vacuum"),
 			"expHall",
@@ -253,7 +328,7 @@ G4VPhysicalVolume* WCSimDetectorConstruction::Construct()
   // Create and place the physical Volumes
   //-----------------------------------------------------
   // Experimental Hall
-  G4VPhysicalVolume* physiExpHall = 
+  G4VPhysicalVolume* physiExpHall =
     new G4PVPlacement(0,G4ThreeVector(),
   		      logicExpHall,
   		      "expHall",
@@ -267,7 +342,7 @@ G4VPhysicalVolume* WCSimDetectorConstruction::Construct()
 	  //rotationMatrix->rotateZ(90.*deg);
 
   G4ThreeVector genPosition = G4ThreeVector(0., 0., WCPosition);
-  G4VPhysicalVolume* physiWCBox = 
+  G4VPhysicalVolume* physiWCBox =
     new G4PVPlacement(0,
 		      genPosition,
 		      logicWCBox,
@@ -288,17 +363,17 @@ G4VPhysicalVolume* WCSimDetectorConstruction::Construct()
 
 
   // Traverse and print the geometry Tree
-  
-  //  TraverseReplicas(physiWCBox, 0, G4Transform3D(), 
+
+  //  TraverseReplicas(physiWCBox, 0, G4Transform3D(),
   //	   &WCSimDetectorConstruction::PrintGeometryTree) ;
-  
-  TraverseReplicas(physiWCBox, 0, G4Transform3D(), 
+
+  TraverseReplicas(physiWCBox, 0, G4Transform3D(),
 	           &WCSimDetectorConstruction::DescribeAndRegisterPMT) ;
-  
-  TraverseReplicas(physiWCBox, 0, G4Transform3D(), 
+
+  TraverseReplicas(physiWCBox, 0, G4Transform3D(),
 		   &WCSimDetectorConstruction::GetWCGeom) ;
   DumpGeometryTableToFile();
-  
+
   for(auto apmt : WCTubeCollectionMap){
     int tubeid = apmt.first;
     G4String collectionname = apmt.second;
@@ -308,17 +383,17 @@ G4VPhysicalVolume* WCSimDetectorConstruction::Construct()
       TubeIdsByCollection.at(collectionname).push_back(tubeid);
     }
   }
-  
+
   //G4cout<<"Writing GDML output file"<<G4endl;
   //G4String GDMLOutFilename = "anniegeomv3.gdml";
   //G4GDMLParser parser;  // Write GDML file
   //parser.Write(GDMLOutFilename, logicExpHall);
   //G4cout<<"GDML file "<<GDMLOutFilename<<" written"<<G4endl;
-  
+
   // Return the pointer to the physical experimental hall
   return physiExpHall;
-  
-  
+
+
 }
 
 WCSimLAPPDObject *WCSimDetectorConstruction::CreateLAPPDObject(G4String LAPPDType, G4String CollectionName2)
