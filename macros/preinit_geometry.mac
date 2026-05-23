@@ -1,0 +1,4 @@
+# Geometry options that must be applied before G4 kernel initialization.
+
+#------------ Placeholder for AmBe source, to be replaced by actual source ------------
+/WCSim/AmBe/add true

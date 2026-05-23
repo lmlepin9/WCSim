@@ -102,6 +102,11 @@ int main(int argc,char** argv)
   G4cout<<"Creating Stepping Action"<<G4endl;
   runManager->SetUserAction(new WCSimSteppingAction);
 
+  if(access("macros/preinit_geometry.mac", F_OK)!=-1){
+    G4cout<<"Getting pre-initialization geometry options from preinit_geometry.mac"<<G4endl;
+    UI->ApplyCommand("/control/execute macros/preinit_geometry.mac");
+  }
+
   G4cout<<"Initialising G4 kernel"<<G4endl;
   // Initialize G4 kernel
   runManager->Initialize();
