@@ -36,6 +36,11 @@ hash_map<std::string, int, hash<std::string> > WCSimDetectorConstruction::mrdtub
 hash_map<std::string, int, hash<std::string> > WCSimDetectorConstruction::facctubeLocationMap;
 hash_map<std::string, int, hash<std::string> > WCSimDetectorConstruction::lappdLocationMap;
 
+namespace {
+  const G4String kAmBeHousingGDML =
+    "/home/lmlepin/AmBeTrigSim/AmBeHousing.gdml";
+}
+
 WCSimDetectorConstruction::WCSimDetectorConstruction(G4int DetConfig,WCSimTuningParameters* WCSimTuningPars):WCSimTuningParams(WCSimTuningPars), noRot(0), rotatedmatx(0), upmtx(0), downmtx(0), rightmtx(0), leftmtx(0), scintSurface_op(0), MPTmylarSurface(0), lgSurface_op(0), lgsurf_MPT(0)
 {
 
@@ -51,6 +56,7 @@ WCSimDetectorConstruction::WCSimDetectorConstruction(G4int DetConfig,WCSimTuning
 
   // --- AmBe housing ----------
   addAmBeHousing = false;
+  amBeHousingCenter = G4ThreeVector(0.*cm, -14.46*cm, 168.1*cm);
 
   myConfiguration = DetConfig;
 
@@ -126,6 +132,56 @@ WCSimDetectorConstruction::WCSimDetectorConstruction(G4int DetConfig,WCSimTuning
   //-----------------------------------------------------
 
   messenger = new WCSimDetectorMessenger(this);
+}
+
+void WCSimDetectorConstruction::PlaceAmBeHousing(G4LogicalVolume* motherLog)
+{
+  if(!addAmBeHousing || !motherLog) return;
+
+  G4GDMLParser parser;
+  parser.SetOverlapCheck(true);
+  parser.Read(kAmBeHousingGDML, false);
+
+  G4VPhysicalVolume* gdmlWorldPhys = parser.GetWorldVolume();
+  if(!gdmlWorldPhys){
+    G4cerr << "WCSimDetectorConstruction::PlaceAmBeHousing(): failed to read "
+           << kAmBeHousingGDML << G4endl;
+    return;
+  }
+
+  G4LogicalVolume* gdmlWorldLog = gdmlWorldPhys->GetLogicalVolume();
+  G4LogicalVolume* ambeHousingLog = 0;
+  for(G4int i = 0; i < gdmlWorldLog->GetNoDaughters(); ++i){
+    G4VPhysicalVolume* daughter = gdmlWorldLog->GetDaughter(i);
+    if(daughter && daughter->GetName() == "AmBeHousing"){
+      ambeHousingLog = daughter->GetLogicalVolume();
+      break;
+    }
+  }
+
+  if(!ambeHousingLog){
+    G4cerr << "WCSimDetectorConstruction::PlaceAmBeHousing(): could not find "
+           << "the AmBeHousing physical volume in " << kAmBeHousingGDML
+           << G4endl;
+    return;
+  }
+
+  G4VisAttributes* ambeVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 0.0));
+  ambeVisAtt->SetForceSolid(true);
+  ambeHousingLog->SetVisAttributes(ambeVisAtt);
+
+  new G4PVPlacement(0,
+                    amBeHousingCenter,
+                    ambeHousingLog,
+                    "AmBeHousing",
+                    motherLog,
+                    false,
+                    0,
+                    true);
+
+  G4cout << "[DEBUG] Placed AmBe housing from " << kAmBeHousingGDML
+         << " at tank coordinates " << amBeHousingCenter/cm
+         << " cm with native GDML orientation" << G4endl;
 }
 
 void WCSimDetectorConstruction::SetANNIEDetectorComponents(G4String componentList)

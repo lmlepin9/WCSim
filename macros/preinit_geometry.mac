@@ -1,4 +1,7 @@
 # Geometry options that must be applied before G4 kernel initialization.
 
+/WCSim/ANNIE/DetectorComponents tank
+
 #------------ Placeholder for AmBe source, to be replaced by actual source ------------
 /WCSim/AmBe/add true
+/WCSim/AmBe/center 0 -14.46 168.1 cm
