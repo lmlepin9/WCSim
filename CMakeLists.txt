@@ -209,6 +209,7 @@ file(GLOB WCSIM_MACRO_SCRIPTS RELATIVE ${PROJECT_SOURCE_DIR}
 set(WCSIM_SCRIPTS
   ${WCSIM_MACRO_SCRIPTS}
   pulsecharacteristics.root
+  AmBeHousing.gdml
   PHASE2_INNER_STRUCTURE.gdml
   geniedirectory.txt
   dirtdirectory.txt
