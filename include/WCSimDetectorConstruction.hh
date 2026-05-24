@@ -428,6 +428,9 @@ private:
   G4bool addAmBeHousing;
   G4String amBeHousingGDMLPath;
   G4ThreeVector amBeHousingCenter;
+  G4bool anniePMTTiltEnabled;
+  G4double anniePMTTiltAngle;
+  G4double anniePMTTiltShift;
 
 
 
@@ -683,6 +686,12 @@ private:
   G4ThreeVector GetAmBeHousingCenter() const {return amBeHousingCenter;}
   void PlaceAmBeHousing(G4LogicalVolume* motherLog);
   void ApplyAmBeOpticalProperties(G4LogicalVolume* ambeHousingLog);
+  void SetANNIEPMTTiltEnabled(G4bool val){anniePMTTiltEnabled = val;}
+  G4bool GetANNIEPMTTiltEnabled() const {return anniePMTTiltEnabled;}
+  void SetANNIEPMTTiltAngle(G4double val){anniePMTTiltAngle = val;}
+  G4double GetANNIEPMTTiltAngle() const {return anniePMTTiltAngle;}
+  void SetANNIEPMTTiltShift(G4double val){anniePMTTiltShift = val;}
+  G4double GetANNIEPMTTiltShift() const {return anniePMTTiltShift;}
 
 
 //  private:

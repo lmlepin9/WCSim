@@ -107,10 +107,23 @@ ANNIE detector component selection:
 
 ```
 /WCSim/ANNIE/DetectorComponents tank
+/WCSim/ANNIE/PMTTilt/enabled true
+/WCSim/ANNIE/PMTTilt/angle -53 deg
+/WCSim/ANNIE/PMTTilt/shift 13.9 cm
 /WCSim/AmBe/add true
 /WCSim/AmBe/gdmlPath AmBeHousing.gdml
 /WCSim/AmBe/center 0 0 0 cm
 ```
+
+ANNIEp2v7 PMT tilt options:
+* `/WCSim/ANNIE/PMTTilt/enabled` turns the fixed tilted-PMT placement on or
+  off. The default is `true`.
+* `/WCSim/ANNIE/PMTTilt/angle` sets the extra rotation applied to selected
+  tilted PMTs. The default is `-53 deg`.
+* `/WCSim/ANNIE/PMTTilt/shift` sets the corresponding position shift. The
+  default is `13.9 cm`.
+* These commands affect geometry construction, so put them in
+  `macros/preinit_geometry.mac` for the first geometry build.
 
 AmBe housing coordinates:
 * `/WCSim/AmBe/gdmlPath` sets the GDML file used for the AmBe housing. The

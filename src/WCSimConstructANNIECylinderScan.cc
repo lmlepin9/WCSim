@@ -243,7 +243,7 @@ G4LogicalVolume* WCSimDetectorConstruction::ConstructANNIECylinderScan()
 		G4RotationMatrix* WCPMTtiltRotationNext = new G4RotationMatrix(*WCPMTRotation);
 		WCPMTRotationNext->rotateX((dPhi*facei)-67.5*deg+180*deg);
 		WCPMTtiltRotationNext->rotateX((dPhi*facei)-67.5*deg+180*deg);
-		WCPMTtiltRotationNext->rotateY(-53.*deg);
+		WCPMTtiltRotationNext->rotateY(GetANNIEPMTTiltAngle());
 		pmt_rotation_matrices.push_back(WCPMTRotationNext);
 		tilted_pmt_rotation_matrices.push_back(WCPMTtiltRotationNext);
 	}
@@ -267,12 +267,13 @@ G4LogicalVolume* WCSimDetectorConstruction::ConstructANNIECylinderScan()
 		if (pmt_position_file.eof()) break;
 		//G4cout << "Read in PMT "<<PMTID<<", panel nr: "<<panel_nr<<", Position ("<<pmt_x<<","<<pmt_y<<","<<pmt_z<<"), PMT type: "<<pmt_type<<G4endl;
 		G4LogicalVolume *logicWCPMT = logicWCPMTs.at(pmt_type);
-		G4bool useTiltedPMT = ((pmt_type == 3) || (pmt_type == 0 && panel_nr != 0));
+		G4bool useTiltedPMT = GetANNIEPMTTiltEnabled() &&
+		                       ((pmt_type == 3) || (pmt_type == 0 && panel_nr != 0));
 		G4RotationMatrix *pmt_rot = useTiltedPMT ? tilted_pmt_rotation_matrices.at(panel_nr)
 		                                        : pmt_rotation_matrices.at(panel_nr);
 		pmt_x_shift = pmt_x*cm;
 		pmt_y_shift = (168.1-pmt_z)*cm;
-		pmt_z_shift = (pmt_y+14.45+(useTiltedPMT ? 13.9 : 0.))*cm;
+		pmt_z_shift = (pmt_y+14.45)*cm + (useTiltedPMT ? GetANNIEPMTTiltShift() : 0.);
 		//pmt_z_shift = ((pmt_y+14.45)-InnerStructureCentreOffset/10.)*cm;
 		//G4cout <<"Edited PMT position ("<<pmt_x_shift<<","<<pmt_y_shift<<","<<pmt_z_shift<<")"<<G4endl;
 		G4ThreeVector PMTPosition(pmt_x_shift,pmt_y_shift,pmt_z_shift);

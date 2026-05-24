@@ -87,6 +87,9 @@ WCSimDetectorConstruction::WCSimDetectorConstruction(G4int DetConfig,WCSimTuning
   addAmBeHousing = false;
   amBeHousingGDMLPath = "AmBeHousing.gdml";
   amBeHousingCenter = G4ThreeVector(0.*cm, 0.*cm, 0.*cm);
+  anniePMTTiltEnabled = true;
+  anniePMTTiltAngle = -53.*deg;
+  anniePMTTiltShift = 13.9*cm;
 
   myConfiguration = DetConfig;
 

@@ -57,6 +57,9 @@ class WCSimDetectorMessenger: public G4UImessenger
   G4UIcmdWithABool* AddAmBeHousing;
   G4UIcmdWithAString* AmBeHousingGDMLPath;
   G4UIcmdWith3VectorAndUnit* AmBeHousingCenter;
+  G4UIcmdWithABool* ANNIEPMTTiltEnabled;
+  G4UIcmdWithADoubleAndUnit* ANNIEPMTTiltAngle;
+  G4UIcmdWithADoubleAndUnit* ANNIEPMTTiltShift;
 
 };
 
