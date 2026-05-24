@@ -123,6 +123,26 @@ AmBe housing coordinates:
   experimental hall coordinate system. This comes from the ANNIE tank placement
   `(0, -tankyoffset, tankouterRadius + tankzoffset)`.
 
+AmBe particle gun coordinates:
+* The particle gun commands use global WCSim coordinates, not the local
+  AmBe/GDML or tank coordinates used by `/WCSim/AmBe/center`.
+* For ANNIEp2v7, the tank is placed at `(0, -144.64875, 1681) mm` and rotated
+  by `+90 deg` about `X`. Therefore the AmBe source marker position
+  `(2, 0, -168.64) mm` in tank/GDML coordinates maps to
+  `(2, 23.99125, 1681) mm` for `/gun/position`.
+* The BGO is downstream from the source marker in the tank/GDML `+z`
+  direction. Because of the tank rotation, this corresponds to global `-y`, so
+  the 4.4 MeV AmBe validation gamma should use:
+
+```
+/gun/position 2 23.99125 1681 mm
+/gun/direction 0 -1 0
+```
+
+* Using the local GDML direction directly, for example `/gun/direction 0 0 1`,
+  points the gamma along the wrong global axis for this placement and can miss
+  the BGO response.
+
 
 
 ## Color Convention for visualization used in WCSimVismanager.cc
