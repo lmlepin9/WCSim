@@ -15,9 +15,11 @@
 #include "G4RunManager.hh"
 #include "G4PhysicalVolumeStore.hh"
 #include "G4LogicalVolumeStore.hh"
+#include "G4LogicalSkinSurface.hh"
 #include "WCSimDarkRateMessenger.hh"
 #include "G4SolidStore.hh"
 #include "G4GDMLParser.hh"
+#include "G4MaterialPropertiesTable.hh"
 #include "G4PhysicalConstants.hh"
 #include "G4SystemOfUnits.hh"
 #include "G4GeometryTolerance.hh"
@@ -25,6 +27,38 @@
 #include <algorithm>
 #include <cctype>
 #include <sstream>
+
+namespace {
+  G4bool HasMaterialProperty(G4MaterialPropertiesTable* mpt,
+                             const G4String& propertyName)
+  {
+    return mpt && mpt->GetProperty(propertyName.c_str());
+  }
+
+  G4bool HasConstMaterialProperty(G4MaterialPropertiesTable* mpt,
+                                  const G4String& propertyName)
+  {
+    return mpt && mpt->ConstPropertyExists(propertyName.c_str());
+  }
+
+  void CollectLogicalVolumesByName(G4LogicalVolume* logical,
+                                   const G4String& nameFragment,
+                                   std::vector<G4LogicalVolume*>& matches)
+  {
+    if(!logical) return;
+
+    if(logical->GetName().find(nameFragment) != G4String::npos){
+      matches.push_back(logical);
+    }
+
+    for(G4int i = 0; i < logical->GetNoDaughters(); ++i){
+      G4VPhysicalVolume* daughter = logical->GetDaughter(i);
+      if(daughter) CollectLogicalVolumesByName(daughter->GetLogicalVolume(),
+                                               nameFragment,
+                                               matches);
+    }
+  }
+}
 
 std::map<int, G4Transform3D> WCSimDetectorConstruction::tubeIDMap;
 std::map<int, G4Transform3D> WCSimDetectorConstruction::mrdtubeIDMap;
@@ -130,6 +164,133 @@ WCSimDetectorConstruction::WCSimDetectorConstruction(G4int DetConfig,WCSimTuning
   messenger = new WCSimDetectorMessenger(this);
 }
 
+void WCSimDetectorConstruction::ApplyAmBeOpticalProperties(G4LogicalVolume* ambeHousingLog)
+{
+  const G4int nEntries = 13;
+  G4double energy[nEntries] = {
+    1.771*eV, 1.922*eV, 2.084*eV, 2.275*eV, 2.505*eV,
+    2.755*eV, 2.987*eV, 3.220*eV, 3.492*eV, 3.874*eV,
+    4.350*eV, 5.060*eV, 6.199*eV
+  };
+
+  G4double bgoScintillation[nEntries] = {
+    0.00, 0.08, 0.28, 0.62, 0.95, 0.87, 0.42,
+    0.08, 0.00, 0.00, 0.00, 0.00, 0.00
+  };
+  G4double bgoRIndex[nEntries] = {
+    2.084, 2.095, 2.107, 2.124, 2.146, 2.174, 2.216,
+    2.241, 2.289, 2.387, 2.473, 2.589, 2.718
+  };
+  G4double bgoAbsLength[nEntries] = {
+    10.0*cm, 9.9*cm, 9.7*cm, 9.6*cm, 9.4*cm, 9.1*cm, 8.6*cm,
+    8.0*cm, 7.3*cm, 2.6*cm, 1.0e-6*cm, 1.0e-6*cm, 1.0e-6*cm
+  };
+
+  G4Material* bgo = G4Material::GetMaterial("BGO", false);
+  G4MaterialPropertiesTable* parsedBgoMPT =
+    bgo ? bgo->GetMaterialPropertiesTable() : 0;
+  if(!bgo){
+    G4cerr << "WCSimDetectorConstruction::ApplyAmBeOpticalProperties(): "
+           << "BGO material from " << amBeHousingGDMLPath << " was not found"
+           << G4endl;
+  } else if(!HasMaterialProperty(parsedBgoMPT, "SCINTILLATIONCOMPONENT1") ||
+            !HasMaterialProperty(parsedBgoMPT, "RINDEX") ||
+            !HasMaterialProperty(parsedBgoMPT, "ABSLENGTH")){
+    G4MaterialPropertiesTable* bgoMPT = new G4MaterialPropertiesTable();
+    bgoMPT->AddProperty("SCINTILLATIONCOMPONENT1", energy, bgoScintillation, nEntries);
+    bgoMPT->AddProperty("SCINTILLATIONCOMPONENT2", energy, bgoScintillation, nEntries);
+    bgoMPT->AddProperty("RINDEX", energy, bgoRIndex, nEntries);
+    bgoMPT->AddProperty("ABSLENGTH", energy, bgoAbsLength, nEntries);
+    bgoMPT->AddConstProperty("SCINTILLATIONYIELD", 10000./MeV);
+    bgoMPT->AddConstProperty("RESOLUTIONSCALE", 2.0);
+    bgoMPT->AddConstProperty("SCINTILLATIONTIMECONSTANT1", 1.0*ns);
+    bgoMPT->AddConstProperty("SCINTILLATIONTIMECONSTANT2", 300.0*ns);
+    bgoMPT->AddConstProperty("SCINTILLATIONYIELD1", 0.0);
+    bgoMPT->AddConstProperty("SCINTILLATIONYIELD2", 1.0);
+    bgo->SetMaterialPropertiesTable(bgoMPT);
+  }
+  if(bgo){
+    G4MaterialPropertiesTable* bgoMPT = bgo->GetMaterialPropertiesTable();
+    if(bgoMPT){
+      // Geant4 10.7 defaults to the legacy scintillation timing mode, which
+      // requires FASTCOMPONENT even when GDML provides SCINTILLATIONCOMPONENT1.
+      if(!HasMaterialProperty(bgoMPT, "FASTCOMPONENT")){
+        bgoMPT->AddProperty("FASTCOMPONENT", energy, bgoScintillation, nEntries);
+      }
+      if(!HasConstMaterialProperty(bgoMPT, "FASTTIMECONSTANT")){
+        bgoMPT->AddConstProperty("FASTTIMECONSTANT", 300.0*ns);
+      }
+      if(!HasConstMaterialProperty(bgoMPT, "SCINTILLATIONYIELD")){
+        bgoMPT->AddConstProperty("SCINTILLATIONYIELD", 10000./MeV);
+      }
+      if(!HasConstMaterialProperty(bgoMPT, "RESOLUTIONSCALE")){
+        bgoMPT->AddConstProperty("RESOLUTIONSCALE", 2.0);
+      }
+    }
+  }
+
+  G4double teflonRIndex[nEntries];
+  G4double teflonReflectivity[nEntries];
+  G4double teflonEfficiency[nEntries];
+  for(G4int i = 0; i < nEntries; ++i){
+    teflonRIndex[i] = 1.35;
+    teflonReflectivity[i] = 0.90;
+    teflonEfficiency[i] = 0.0;
+  }
+
+  const G4int nAbsEntries = 2;
+  G4double teflonAbsEnergy[nAbsEntries] = {1.771*eV, 6.199*eV};
+  G4double teflonAbsLength[nAbsEntries] = {1.0e-6*m, 1.0e-6*m};
+
+  G4Material* teflon = G4Material::GetMaterial("Teflon", false);
+  G4MaterialPropertiesTable* parsedTeflonMPT =
+    teflon ? teflon->GetMaterialPropertiesTable() : 0;
+  if(!teflon){
+    G4cerr << "WCSimDetectorConstruction::ApplyAmBeOpticalProperties(): "
+           << "Teflon material from " << amBeHousingGDMLPath << " was not found"
+           << G4endl;
+  } else if(!HasMaterialProperty(parsedTeflonMPT, "RINDEX") ||
+            !HasMaterialProperty(parsedTeflonMPT, "ABSLENGTH") ||
+            !HasMaterialProperty(parsedTeflonMPT, "REFLECTIVITY")){
+    G4MaterialPropertiesTable* teflonMPT = new G4MaterialPropertiesTable();
+    teflonMPT->AddProperty("RINDEX", energy, teflonRIndex, nEntries);
+    teflonMPT->AddProperty("ABSLENGTH", teflonAbsEnergy, teflonAbsLength, nAbsEntries);
+    teflonMPT->AddProperty("REFLECTIVITY", energy, teflonReflectivity, nEntries);
+    teflonMPT->AddProperty("EFFICIENCY", energy, teflonEfficiency, nEntries);
+    teflon->SetMaterialPropertiesTable(teflonMPT);
+  }
+
+  std::vector<G4LogicalVolume*> teflonWrappingLogs;
+  CollectLogicalVolumesByName(ambeHousingLog,
+                              "BGO_teflon_wrapping",
+                              teflonWrappingLogs);
+  G4OpticalSurface* teflonSurface = 0;
+  for(size_t i = 0; i < teflonWrappingLogs.size(); ++i){
+    if(!G4LogicalSkinSurface::GetSurface(teflonWrappingLogs[i])){
+      if(!teflonSurface){
+        G4MaterialPropertiesTable* teflonSurfaceMPT = new G4MaterialPropertiesTable();
+        teflonSurfaceMPT->AddProperty("REFLECTIVITY", energy, teflonReflectivity, nEntries);
+        teflonSurfaceMPT->AddProperty("EFFICIENCY", energy, teflonEfficiency, nEntries);
+
+        teflonSurface = new G4OpticalSurface("BGO_Teflon_OpticalSurface_WCSim");
+        teflonSurface->SetType(dielectric_metal);
+        teflonSurface->SetModel(glisur);
+        teflonSurface->SetFinish(ground);
+        teflonSurface->SetPolish(0.9);
+        teflonSurface->SetMaterialPropertiesTable(teflonSurfaceMPT);
+      }
+      new G4LogicalSkinSurface("BGO_Teflon_SkinSurface_WCSim",
+                               teflonWrappingLogs[i],
+                               teflonSurface);
+    }
+  }
+
+  G4cout << "Applied AmBe BGO scintillation properties and teflon optical "
+         << "behavior from " << amBeHousingGDMLPath << " to "
+         << teflonWrappingLogs.size() << " teflon wrapping logical volume(s)"
+         << G4endl;
+}
+
 void WCSimDetectorConstruction::PlaceAmBeHousing(G4LogicalVolume* motherLog)
 {
   if(!addAmBeHousing || !motherLog) return;
@@ -147,6 +308,7 @@ void WCSimDetectorConstruction::PlaceAmBeHousing(G4LogicalVolume* motherLog)
 
   G4LogicalVolume* gdmlWorldLog = gdmlWorldPhys->GetLogicalVolume();
   G4LogicalVolume* ambeHousingLog = 0;
+  G4VPhysicalVolume* barrelAirPhys = 0;
   for(G4int i = 0; i < gdmlWorldLog->GetNoDaughters(); ++i){
     G4VPhysicalVolume* daughter = gdmlWorldLog->GetDaughter(i);
     if(daughter && daughter->GetName() == "AmBeHousing"){
@@ -162,13 +324,68 @@ void WCSimDetectorConstruction::PlaceAmBeHousing(G4LogicalVolume* motherLog)
     return;
   }
 
+  for(G4int i = 0; i < ambeHousingLog->GetNoDaughters(); ++i){
+    G4VPhysicalVolume* daughter = ambeHousingLog->GetDaughter(i);
+    if(daughter && daughter->GetName().contains("barrel_air_vol")){
+      barrelAirPhys = daughter;
+      break;
+    }
+  }
+
+  if(!barrelAirPhys){
+    G4cerr << "WCSimDetectorConstruction::PlaceAmBeHousing(): could not find "
+           << "barrel_air_vol inside AmBeHousing in " << amBeHousingGDMLPath
+           << G4endl;
+    return;
+  }
+
+  G4LogicalVolume* barrelAirLog = barrelAirPhys->GetLogicalVolume();
+  G4ThreeVector barrelAirPosition = barrelAirPhys->GetObjectTranslation();
+  ambeHousingLog->RemoveDaughter(barrelAirPhys);
+
+  G4Tubs* ambeEnvelopeSolid =
+    new G4Tubs("AmBeHousingEnvelope",
+               0.*mm,
+               45.*mm,
+               240.*mm,
+               0.*deg,
+               360.*deg);
+  G4LogicalVolume* ambeEnvelopeLog =
+    new G4LogicalVolume(ambeEnvelopeSolid,
+                        motherLog->GetMaterial(),
+                        "AmBeHousingEnvelope",
+                        0,
+                        0,
+                        0);
+
   G4VisAttributes* ambeVisAtt = new G4VisAttributes(G4Colour(1.0, 0.0, 0.0));
   ambeVisAtt->SetForceSolid(true);
   ambeHousingLog->SetVisAttributes(ambeVisAtt);
+  ambeEnvelopeLog->SetVisAttributes(G4VisAttributes::Invisible);
+
+  new G4PVPlacement(0,
+                    G4ThreeVector(),
+                    ambeHousingLog,
+                    "AmBeHousingShell",
+                    ambeEnvelopeLog,
+                    false,
+                    0,
+                    true);
+
+  new G4PVPlacement(0,
+                    barrelAirPosition,
+                    barrelAirLog,
+                    "barrel_air_vol_PV",
+                    ambeEnvelopeLog,
+                    false,
+                    0,
+                    true);
+
+  ApplyAmBeOpticalProperties(ambeEnvelopeLog);
 
   new G4PVPlacement(0,
                     amBeHousingCenter,
-                    ambeHousingLog,
+                    ambeEnvelopeLog,
                     "AmBeHousing",
                     motherLog,
                     false,
@@ -177,7 +394,8 @@ void WCSimDetectorConstruction::PlaceAmBeHousing(G4LogicalVolume* motherLog)
 
   G4cout << "[DEBUG] Placed AmBe housing from " << amBeHousingGDMLPath
          << " at tank coordinates " << amBeHousingCenter/cm
-         << " cm with native GDML orientation" << G4endl;
+         << " cm with a navigable envelope around the native GDML geometry"
+         << G4endl;
 }
 
 void WCSimDetectorConstruction::SetANNIEDetectorComponents(G4String componentList)

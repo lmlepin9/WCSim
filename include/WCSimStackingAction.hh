@@ -17,11 +17,18 @@ class WCSimStackingAction : public G4UserStackingAction {
     virtual G4ClassificationOfNewTrack ClassifyNewTrack(const G4Track* aTrack);
     virtual void NewStage();
     virtual void PrepareNewEvent();
+    static void ResetBGOScintillationOpticalPhotons();
+    static void AddBGOEnergyDeposit(G4double edep);
+    static G4int GetBGOScintillationOpticalPhotons();
+    static G4double GetBGOEnergyDeposit();
+    static G4int GetBGOStepsWithEnergyDeposit();
 
   private:
 	  WCSimDetectorConstruction*   DetConstruct;
+    static G4int bgoScintillationOpticalPhotons;
+    static G4double bgoEnergyDeposit;
+    static G4int bgoStepsWithEnergyDeposit;
 
 };
 
 #endif
-

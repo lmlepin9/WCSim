@@ -682,6 +682,7 @@ private:
   void SetAmBeHousingCenter(const G4ThreeVector& val){amBeHousingCenter = val;}
   G4ThreeVector GetAmBeHousingCenter() const {return amBeHousingCenter;}
   void PlaceAmBeHousing(G4LogicalVolume* motherLog);
+  void ApplyAmBeOpticalProperties(G4LogicalVolume* ambeHousingLog);
 
 
 //  private:

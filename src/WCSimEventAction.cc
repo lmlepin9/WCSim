@@ -11,6 +11,7 @@
 #include "WCSimWCLAPPD.hh"
 #include "WCSimDetectorConstruction.hh"
 #include "WCSimEventInformation.hh"
+#include "WCSimStackingAction.hh"
 
 #include "G4Event.hh"
 #include "G4RunManager.hh"
@@ -246,6 +247,7 @@ void WCSimEventAction::CreateDAQInstances()
 
   if(isANNIE){
     // Repeat for MRD
+    if(detectorConstructor->GetConstructMRD()){
     if(DigitizerChoices.at("mrd")=="SKI"){
 #ifdef HYPER_VERBOSITY
       G4cout<<"WCSimEventAction::CreateDAQInstances ☆ making new WCSimWCDigitizerSKI for mrd with name WCReadoutDigits_MRD"<<G4endl;
@@ -256,16 +258,6 @@ void WCSimEventAction::CreateDAQInstances()
       G4cerr << "Unknown MRD DigitizerChoice " << DigitizerChoices.at("mrd") << G4endl;
       exit(-1);
     }
-    // repeat for FACC
-    if(DigitizerChoices.at("facc")=="SKI"){
-      WCSimWCDigitizerSKI* WCDM_FACC = new WCSimWCDigitizerSKI("WCReadoutDigits_FACC", detectorConstructor, DAQMessenger, "facc");
-      DMman->AddNewModule(WCDM_FACC);
-    } else {
-      G4cerr << "Unknown FACC DigitizerChoice " << DigitizerChoices.at("facc") << G4endl;
-      exit(-1);
-    }
-    
-    
 #ifdef HYPER_VERBOSITY
     G4cout<<"WCSimEventAction::CreateDAQInstances ☆ making new WCSimWCTriggerOnTankDigits for mrd with name WCReadout_MRD"<<G4endl;
 #endif
@@ -288,8 +280,18 @@ void WCSimEventAction::CreateDAQInstances()
       G4cerr<<"Unknown trigger choice for mrd: "<<TriggerChoices.at("mrd") <<G4endl;
       exit(-1);
     }
+    }
     
       // repeat for facc
+    if(detectorConstructor->GetConstructFACC()){
+    if(DigitizerChoices.at("facc")=="SKI"){
+      WCSimWCDigitizerSKI* WCDM_FACC = new WCSimWCDigitizerSKI("WCReadoutDigits_FACC", detectorConstructor, DAQMessenger, "facc");
+      DMman->AddNewModule(WCDM_FACC);
+    } else {
+      G4cerr << "Unknown FACC DigitizerChoice " << DigitizerChoices.at("facc") << G4endl;
+      exit(-1);
+    }
+
     if(TriggerChoices.at("facc") == "NoTrigger") {
       WCSimWCTriggerNoTrigger* WCTM_FACC = new WCSimWCTriggerNoTrigger("WCReadout_FACC", detectorConstructor, DAQMessenger, "facc");
       DMman->AddNewModule(WCTM_FACC);
@@ -307,6 +309,7 @@ void WCSimEventAction::CreateDAQInstances()
       G4cerr<<"Unknown trigger choice for mrd: "<<TriggerChoices.at("mrd") <<G4endl;
       exit(-1);
     }
+    }
     
   }
   
@@ -316,6 +319,8 @@ void WCSimEventAction::CreateDAQInstances()
 
 void WCSimEventAction::BeginOfEventAction(const G4Event* evt)
 {
+  WCSimStackingAction::ResetBGOScintillationOpticalPhotons();
+
   if(!ConstructedDAQClasses)
     CreateDAQInstances();
   
@@ -328,6 +333,14 @@ void WCSimEventAction::EndOfEventAction(const G4Event* evt)
   G4cout<<G4endl;
   G4cout<<"############# WCSIM  BEGIN END OF EVENT ACTION  ################"<<G4endl;
   G4int         event_id = evt->GetEventID();
+  G4cout<<"[AmBe debug] Event "<<event_id
+        <<": BGO scintillation optical photons generated = "
+        <<WCSimStackingAction::GetBGOScintillationOpticalPhotons()
+        <<", BGO edep = "
+        <<WCSimStackingAction::GetBGOEnergyDeposit()/MeV
+        <<" MeV, BGO edep steps = "
+        <<WCSimStackingAction::GetBGOStepsWithEnergyDeposit()
+        <<G4endl;
   // ----------------------------------------------------------------------
   //  Get Particle Table
   // ----------------------------------------------------------------------
@@ -466,10 +479,10 @@ void WCSimEventAction::EndOfEventAction(const G4Event* evt)
   }
   */
   
-  WCSimWCDigitsCollection* WCDC_hits_MRD;
-  WCSimWCTriggeredDigitsCollection* WCDC_MRD;
-  WCSimWCDigitsCollection* WCDC_hits_FACC;
-  WCSimWCTriggeredDigitsCollection* WCDC_FACC;
+  WCSimWCDigitsCollection* WCDC_hits_MRD = 0;
+  WCSimWCTriggeredDigitsCollection* WCDC_MRD = 0;
+  WCSimWCDigitsCollection* WCDC_hits_FACC = 0;
+  WCSimWCTriggeredDigitsCollection* WCDC_FACC = 0;
   if(isANNIE){
     if(detectorConstructor->GetTotalNumLAPPDs()!=0){
     WCSimWCHitsCollection* WCHClappd = 0;
@@ -719,7 +732,8 @@ void WCSimEventAction::EndOfEventAction(const G4Event* evt)
     
     } // end of if TotalNumLAPPDs!=0
     
-    // Repeat the steps for the MRD and FACC
+    // Repeat the steps for the MRD and FACC if those detector components exist.
+    if(detectorConstructor->GetConstructMRD()){
     G4cout<<G4endl<<G4endl;
     G4String WCMRDCollectionName = detectorConstructor->GetMRDCollectionName();
     if(HCE){
@@ -771,8 +785,10 @@ void WCSimEventAction::EndOfEventAction(const G4Event* evt)
   #ifdef HYPER_VERBOSITY
     if(WCDC_hits_MRD){G4cout<<WCDC_MRD->entries();} else {G4cout<<"no";} G4cout<<" entries"<<G4endl;
   #endif
+    }
     ///////////////////////////////
     // Repeat for FACC
+    if(detectorConstructor->GetConstructFACC()){
     G4cout<<G4endl<<G4endl;
     G4String WCFACCCollectionName = detectorConstructor->GetFACCCollectionName();
     if(HCE){
@@ -793,6 +809,7 @@ void WCSimEventAction::EndOfEventAction(const G4Event* evt)
     WCDC_hits_FACC = (WCSimWCDigitsCollection*) DMman->GetDigiCollection(WCDChitsID_FACC);
     G4int WCDCID_FACC = DMman->GetDigiCollectionID("WCDigitizedCollection_FACC");
     WCDC_FACC = (WCSimWCTriggeredDigitsCollection*) DMman->GetDigiCollection(WCDCID_FACC);
+    }
     /////////////////////////////////////////////////////
     
   // ----------------------------------------------------------------------
@@ -1071,22 +1088,24 @@ void WCSimEventAction::EndOfEventAction(const G4Event* evt)
 		WCDC,
 		"tank");
 		
-	if(isANNIE){
-  G4cout<<"Filling MRD Root Event"<<G4endl;
-  FillRootEvent(event_id,
-		jhfNtuple,
+		if(isANNIE && detectorConstructor->GetConstructMRD()){
+	  G4cout<<"Filling MRD Root Event"<<G4endl;
+	  FillRootEvent(event_id,
+			jhfNtuple,
 		trajectoryContainer,
 		WCDC_hits_MRD,
-		WCDC_MRD,
-		"mrd");
-  G4cout<<"Filling FACC Root Event"<<G4endl;
-  FillRootEvent(event_id,
-		jhfNtuple,
+			WCDC_MRD,
+			"mrd");
+		}
+		if(isANNIE && detectorConstructor->GetConstructFACC()){
+	  G4cout<<"Filling FACC Root Event"<<G4endl;
+	  FillRootEvent(event_id,
+			jhfNtuple,
 		trajectoryContainer,
 		WCDC_hits_FACC,
-		WCDC_FACC,
-		"facc");
-	}
+			WCDC_FACC,
+			"facc");
+		}
   
   TTree* tree = GetRunAction()->GetTree();
   TBranch* tankeventbranch = tree->GetBranch("wcsimrootevent");

@@ -6,6 +6,8 @@
 #include "G4TrackStatus.hh"
 #include "G4VProcess.hh"
 #include "G4VPhysicalVolume.hh"
+#include "G4LogicalVolume.hh"
+#include "G4Material.hh"
 #include "Randomize.hh"
 #include "G4Navigator.hh"
 #include "G4TransportationManager.hh"
@@ -16,6 +18,10 @@
 #include <iomanip>
 
 //class WCSimDetectorConstruction;
+
+G4int WCSimStackingAction::bgoScintillationOpticalPhotons = 0;
+G4double WCSimStackingAction::bgoEnergyDeposit = 0.;
+G4int WCSimStackingAction::bgoStepsWithEnergyDeposit = 0;
 
 WCSimStackingAction::WCSimStackingAction(WCSimDetectorConstruction* myDet):DetConstruct(myDet) {;}
 WCSimStackingAction::~WCSimStackingAction(){;}
@@ -35,6 +41,19 @@ G4ClassificationOfNewTrack WCSimStackingAction::ClassifyNewTrack
   
   // Make sure it is an optical photon
   if( particleType == G4OpticalPhoton::OpticalPhotonDefinition() ){
+      const G4VProcess* creatorProcess = aTrack->GetCreatorProcess();
+      if(creatorProcess && creatorProcess->GetProcessName()=="Scintillation"){
+        const G4VPhysicalVolume* volume = aTrack->GetVolume();
+        const G4LogicalVolume* logicalVolume = volume ? volume->GetLogicalVolume() : 0;
+        const G4Material* material = logicalVolume ? logicalVolume->GetMaterial() : 0;
+
+        const G4String volumeName = volume ? volume->GetName() : "";
+        const G4String materialName = material ? material->GetName() : "";
+        if(volumeName.contains("BGO") || materialName.contains("BGO")){
+          ++bgoScintillationOpticalPhotons;
+        }
+      }
+
       // MF : translated from skdetsim : better to increase the number of photons
       // than to throw in a global factor at Digitization time !
       // XQ: get the maximum QE and multiply it by the ratio
@@ -92,3 +111,30 @@ G4ClassificationOfNewTrack WCSimStackingAction::ClassifyNewTrack
 void WCSimStackingAction::NewStage() {;}
 void WCSimStackingAction::PrepareNewEvent() {;}
 
+void WCSimStackingAction::ResetBGOScintillationOpticalPhotons()
+{
+  bgoScintillationOpticalPhotons = 0;
+  bgoEnergyDeposit = 0.;
+  bgoStepsWithEnergyDeposit = 0;
+}
+
+void WCSimStackingAction::AddBGOEnergyDeposit(G4double edep)
+{
+  bgoEnergyDeposit += edep;
+  ++bgoStepsWithEnergyDeposit;
+}
+
+G4int WCSimStackingAction::GetBGOScintillationOpticalPhotons()
+{
+  return bgoScintillationOpticalPhotons;
+}
+
+G4double WCSimStackingAction::GetBGOEnergyDeposit()
+{
+  return bgoEnergyDeposit;
+}
+
+G4int WCSimStackingAction::GetBGOStepsWithEnergyDeposit()
+{
+  return bgoStepsWithEnergyDeposit;
+}

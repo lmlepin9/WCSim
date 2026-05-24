@@ -1,0 +1,53 @@
+#!/bin/sh
+# Minimal AmBe-source batch macro.
+
+/run/verbose 0
+/tracking/verbose 0
+/hits/verbose 0
+/process/em/verbose 0
+/process/had/cascade/verbose 0
+/process/verbose 0
+/process/setVerbose 0
+
+# Geometry options that affect construction are applied before Geant4 kernel
+# initialization by macros/preinit_geometry.mac.  Do not call /WCSim/WCgeom or
+# /WCSim/Construct here, because this batch macro is executed after the initial
+# geometry has already been built.
+#
+# Geometry used for AmBe source studies.  The source marker in
+# AmBeHousing.gdml is at z = 7.365 mm - 176.005 mm = -168.64 mm
+# relative to the placed AmBeHousing center.
+
+/WCSim/PMTQEMethod Multi_Tank_Types
+/WCSim/LAPPDQEMethod Multi_Tank_Types
+/WCSim/PMTCollEff on
+/WCSim/SavePi0 false
+/WCSim/SaveCapture true
+
+/control/execute macros/annie_daq.mac
+
+# Record every event while validating the AmBe source response, even if the
+# tank trigger does not fire.
+/DAQ/SetDetectorElement tank
+/DAQ/Trigger NoTrigger
+
+/DarkRate/SetDetectorElement tank
+/DarkRate/SetDarkRate 0 kHz
+
+# Start with a monoenergetic 4.4 MeV gamma from the AmBe source marker.
+# The AmBe housing is placed in tank coordinates, but the gun takes global
+# coordinates.  ANNIEp2v7 places the tank at (0, -144.64875, 1681) mm
+# and rotates it by +90 deg about X, so the AmBe source marker
+# (2, 0, -168.64) mm in tank/GDML coordinates maps to
+# (2, 23.99125, 1681) mm in global coordinates.  The BGO is downstream
+# in the tank/GDML +z direction, which maps to global -y.
+/mygen/generator gun
+/gun/particle gamma
+/gun/energy 4.4 MeV
+/gun/position 2 23.99125 1681 mm
+/gun/direction 0 -1 0
+
+/control/execute macros/setRandomParameters.mac
+/WCSimIO/RootFile wcsim_ambe_gamma
+
+/run/beamOn 10

@@ -15,6 +15,12 @@
 #include "G4SDManager.hh"
 #include "G4RunManager.hh"
 #include "G4OpBoundaryProcess.hh"
+#include "G4Step.hh"
+#include "G4StepPoint.hh"
+#include "G4VPhysicalVolume.hh"
+#include "G4LogicalVolume.hh"
+#include "G4Material.hh"
+#include "WCSimStackingAction.hh"
 
 
 void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
@@ -23,6 +29,19 @@ void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
 
   G4Track* track = aStep->GetTrack();
 //  G4VPhysicalVolume* thePostPV = aStep->GetPostStepPoint()->GetPhysicalVolume();
+
+  G4double edep = aStep->GetTotalEnergyDeposit();
+  if(edep>0.){
+    const G4StepPoint* preStepPoint = aStep->GetPreStepPoint();
+    const G4VPhysicalVolume* volume = preStepPoint ? preStepPoint->GetPhysicalVolume() : 0;
+    const G4LogicalVolume* logicalVolume = volume ? volume->GetLogicalVolume() : 0;
+    const G4Material* material = logicalVolume ? logicalVolume->GetMaterial() : 0;
+    const G4String volumeName = volume ? volume->GetName() : "";
+    const G4String materialName = material ? material->GetName() : "";
+    if(volumeName.contains("BGO") || materialName.contains("BGO")){
+      WCSimStackingAction::AddBGOEnergyDeposit(edep);
+    }
+  }
 
   // For estimating tank energy loss vs digits, need an accurate energy on tank exit - kill particle on
   // tank exit,then end energy will be tank exit energy
