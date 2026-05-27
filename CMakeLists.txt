@@ -194,6 +194,9 @@ file(GLOB headers ${PROJECT_SOURCE_DIR}/include/*.hh)
 add_executable(WCSim WCSim.cc ${sources} ${headers})
 target_link_libraries(WCSim ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ${Genie_LIBRARIES} ${Root_LIBRARIES} WCSimRoot Tree ${cadmesh_LIBRARIES})
 
+add_executable(WCSimAmBePMTResponse tools/WCSimAmBePMTResponse.cc
+  src/WCSimAmBePMTResponse.cc)
+target_link_libraries(WCSimAmBePMTResponse ${ROOT_LIBRARIES} Tree Hist RIO)
 
 
 #----------------------------------------------------------------------------

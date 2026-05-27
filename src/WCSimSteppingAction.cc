@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "WCSimSteppingAction.hh"
+#include "WCSimAmBePMTHitCollector.hh"
 #include "G4ParticleDefinition.hh"
 #include "G4ParticleTypes.hh"
 #include "G4Track.hh"
@@ -93,6 +94,43 @@ void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
 //  }
   
   if(track->GetDefinition()==G4OpticalPhoton::OpticalPhotonDefinition()){
+   const G4VPhysicalVolume* preVolume = aStep->GetPreStepPoint()->GetPhysicalVolume();
+   const G4VPhysicalVolume* postVolume = aStep->GetPostStepPoint()->GetPhysicalVolume();
+   const G4bool preIsAmBePMT =
+     preVolume &&
+     (preVolume->GetName() == "PMTLV" ||
+      preVolume->GetLogicalVolume()->GetName().contains("PMTLV"));
+   const G4bool postIsAmBePMT =
+     postVolume &&
+     (postVolume->GetName() == "PMTLV" ||
+      postVolume->GetLogicalVolume()->GetName().contains("PMTLV"));
+
+   if(!preIsAmBePMT && postIsAmBePMT){
+     G4int processId = 2;
+     G4String processName = "primary";
+     if(track->GetCreatorProcess()){
+       processName = track->GetCreatorProcess()->GetProcessName();
+       if(processName == "Scintillation") processId = 0;
+       else if(processName == "Cerenkov") processId = 1;
+     }
+
+     const G4StepPoint* hitPoint = aStep->GetPostStepPoint();
+     const G4ThreeVector& hitPosition = hitPoint->GetPosition();
+     const G4Event* event = G4RunManager::GetRunManager()->GetCurrentEvent();
+     if(fAmBePMTHitCollector){
+       fAmBePMTHitCollector->RecordHit(event ? event->GetEventID() : -1,
+                                       hitPosition.x()/cm,
+                                       hitPosition.y()/cm,
+                                       hitPosition.z()/cm,
+                                       hitPoint->GetGlobalTime()/ns,
+                                       track->GetKineticEnergy()/eV,
+                                       processId,
+                                       processName);
+     }
+     track->SetTrackStatus(fStopAndKill);
+     fExpectedNextStatus = Undefined;
+     return;
+   }
   
 //   if(aStep->IsFirstStepInVolume()){  // FIXME: kill photon if no RINDEX. Should be automatic?!
 //     G4MaterialPropertyVector* RindexVector=nullptr;

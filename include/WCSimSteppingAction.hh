@@ -8,12 +8,14 @@
 
 class G4HCofThisEvent;
 class G4Event;
+class WCSimAmBePMTHitCollector;
 
 class WCSimSteppingAction : public G4UserSteppingAction
 {
 
 public:
-  WCSimSteppingAction() : fExpectedNextStatus(Undefined)
+  WCSimSteppingAction(WCSimAmBePMTHitCollector* amBePMTHitCollector)
+    : fAmBePMTHitCollector(amBePMTHitCollector), fExpectedNextStatus(Undefined)
   {};
 
   ~WCSimSteppingAction()
@@ -35,6 +37,7 @@ public:
 
 private:
 
+  WCSimAmBePMTHitCollector* fAmBePMTHitCollector;
   G4double ret[2];
   G4OpBoundaryProcessStatus fExpectedNextStatus;
   G4String ToName(G4OpBoundaryProcessStatus boundaryStatus);

@@ -12,6 +12,7 @@
 #include "WCSimDetectorConstruction.hh"
 #include "WCSimEventInformation.hh"
 #include "WCSimStackingAction.hh"
+#include "WCSimAmBePMTHitCollector.hh"
 
 #include "G4Event.hh"
 #include "G4RunManager.hh"
@@ -320,6 +321,7 @@ void WCSimEventAction::CreateDAQInstances()
 void WCSimEventAction::BeginOfEventAction(const G4Event* evt)
 {
   WCSimStackingAction::ResetBGOScintillationOpticalPhotons();
+  runAction->GetAmBePMTHitCollector()->BeginEvent(evt->GetEventID());
 
   if(!ConstructedDAQClasses)
     CreateDAQInstances();
@@ -1106,6 +1108,8 @@ void WCSimEventAction::EndOfEventAction(const G4Event* evt)
 			WCDC_FACC,
 			"facc");
 		}
+
+  runAction->GetAmBePMTHitCollector()->EndEvent(event_id);
   
   TTree* tree = GetRunAction()->GetTree();
   TBranch* tankeventbranch = tree->GetBranch("wcsimrootevent");

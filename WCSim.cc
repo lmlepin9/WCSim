@@ -13,6 +13,7 @@
 #include "WCSimStackingAction.hh"
 #include "WCSimTrackingAction.hh"
 #include "WCSimSteppingAction.hh"
+#include "WCSimAmBePMTHitCollector.hh"
 #include "WCSimVisManager.hh"
 #if defined(G4VIS_USE) || defined(G4VIS_USE_OPENGL) || defined(G4VIS_USE_OPENGLX) || defined(G4VIS_USE_OPENGLQT)
 #include "G4VisExecutive.hh"
@@ -100,7 +101,7 @@ int main(int argc,char** argv)
   G4cout<<"Creating Stacking Action"<<G4endl;
   runManager->SetUserAction(new WCSimStackingAction(WCSimdetector));
   G4cout<<"Creating Stepping Action"<<G4endl;
-  runManager->SetUserAction(new WCSimSteppingAction);
+  runManager->SetUserAction(new WCSimSteppingAction(myRunAction->GetAmBePMTHitCollector()));
 
   if(access("macros/preinit_geometry.mac", F_OK)!=-1){
     G4cout<<"Getting pre-initialization geometry options from preinit_geometry.mac"<<G4endl;

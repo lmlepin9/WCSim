@@ -1,5 +1,6 @@
 #include "WCSimRunAction.hh"
 #include "WCSimRunActionMessenger.hh"
+#include "WCSimAmBePMTHitCollector.hh"
 
 #include "G4Run.hh"
 #include "G4UImanager.hh"
@@ -38,6 +39,7 @@ WCSimRunAction::WCSimRunAction(WCSimDetectorConstruction* test, WCSimRandomParam
   messenger = new WCSimRunActionMessenger(this);
   OutputFileNum=-1;
   WCSimTree=0;
+  amBePMTHitCollector = new WCSimAmBePMTHitCollector();
 
   wcsimrootoptions = new WCSimRootOptions();
   wcsimrootoptions->PopulateFileVersion();   // read from files and/or git the WCSimVersion and git commit hash
@@ -45,7 +47,7 @@ WCSimRunAction::WCSimRunAction(WCSimDetectorConstruction* test, WCSimRandomParam
 
 WCSimRunAction::~WCSimRunAction()
 {
-
+  delete amBePMTHitCollector;
 }
 
 void WCSimRunAction::BeginOfRunAction(const G4Run* aRun)
@@ -81,8 +83,10 @@ void WCSimRunAction::BeginOfRunAction(const G4Run* aRun)
 }
 
 void WCSimRunAction::CloseOutputFile(){
-  if(WCSimTree){ 
+  if(WCSimTree){
     TFile* hfile = WCSimTree->GetCurrentFile(); 
+    hfile->cd();
+    amBePMTHitCollector->Write();
     hfile->Close(); delete hfile; hfile=0; WCSimTree=0;
   }
 }
@@ -94,6 +98,7 @@ void WCSimRunAction::CreateNewOutputFile(){
   G4cout<<"Setting output file to "<<RootFileName<<G4endl;
   TFile* hfile = new TFile(RootFileName.c_str(),"RECREATE","WCSim ROOT file");
   hfile->SetCompressionLevel(2);
+  amBePMTHitCollector->StartOutputFile(hfile);
 
   // Event tree
   WCSimTree = new TTree("wcsimT","WCSim Tree");

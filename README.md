@@ -136,6 +136,23 @@ AmBe housing coordinates:
   experimental hall coordinate system. This comes from the ANNIE tank placement
   `(0, -tankyoffset, tankouterRadius + tankzoffset)`.
 
+AmBe PMT optical hits and response:
+* Optical photons crossing into the GDML `PMTLV` volume are stored separately
+  in the WCSim ROOT output tree `ph` with branches `evt`, `x`, `y`, `z`, `t`,
+  `e`, `process`, and `process_name`. The photon is stopped after this PMT
+  entry hit.
+* `process` is `0` for scintillation, `1` for Cerenkov, and `2` otherwise.
+* The same WCSim ROOT output file contains the separate event-level tree
+  `ambePMT`. It has one row per simulated event and includes
+  `n_photons_entering`, accepted scintillation and Cerenkov photon counts,
+  `triggered`, `trigger_time_ns`, `trigger_global_time_ns`, the waveform, and
+  the trigger-aligned waveform.
+* This AmBe source-tag readout applies its own QE curve, gain smearing,
+  single-photon pulse response, electronics noise, and threshold decision. It
+  is not inserted into the standard tank PMT hit or digit collection.
+* To regenerate histogram-form waveforms from raw `ph` hits, use:
+  `./WCSimAmBePMTResponse wcsim_ambe_gamma_0.root wcsim_ambe_waveforms.root`.
+
 AmBe particle gun coordinates:
 * The particle gun commands use global WCSim coordinates, not the local
   AmBe/GDML or tank coordinates used by `/WCSim/AmBe/center`.

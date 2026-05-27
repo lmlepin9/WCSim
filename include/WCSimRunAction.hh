@@ -17,6 +17,7 @@
 
 class G4Run;
 class WCSimRunActionMessenger;
+class WCSimAmBePMTHitCollector;
 
 class WCSimRunAction : public G4UserRunAction
 {
@@ -58,6 +59,7 @@ public:
     if(detectorElement=="facc") wcsimrootsuperevent_facc=revent;}
   void SetRootGeom(WCSimRootGeom* rgeom){wcsimrootgeom=rgeom;}
   WCSimRootOptions* GetRootOptions(){return wcsimrootoptions;}
+  WCSimAmBePMTHitCollector* GetAmBePMTHitCollector(){return amBePMTHitCollector;}
   int  GetNumberOfEventsGenerated() { return numberOfEventsGenerated;}
   int  GetNtuples(){return ntuples;}
   G4int GetOutputFileNum(){return OutputFileNum;}
@@ -97,6 +99,7 @@ private:
   int numberOfTimesCatcherHit;
 
   WCSimRunActionMessenger* messenger;
+  WCSimAmBePMTHitCollector* amBePMTHitCollector;
   int ntuples;  // 1 for ntuples to be written
   G4bool isANNIE;
 };
