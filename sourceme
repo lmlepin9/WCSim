@@ -4,11 +4,16 @@ export PYTHIA6_DIR=/home/annie/Pythia6Support/v6_424/
 export PYTHIA6_INCLUDE_DIR=/home/annie/Pythia6Support/v6_424/inc/
 export PYTHIA6_LIBRARY=/home/annie/Pythia6Support/v6_424/lib/
 export GENIE=/home/annie/Genie/GENIE-v3-master/install
+
+# Local WCSim (this checkout) instead of the container copy in /home/annie/WCSim/WCSim
+export WCSIM_SOURCE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export WCSIM_BUILD="${WCSIM_BUILD:-$(dirname "${WCSIM_SOURCE}")/WCSim_build}"
+export WCSIMDIR="${WCSIM_BUILD}"
 source /opt/rh/devtoolset-3/enable
 source /home/annie/Geant4/install/bin/geant4.sh
 source /home/annie/ROOT/install/bin/thisroot.sh
-source /home/annie/WCSim/WCSim/envHadronic.sh
+source ${WCSIM_SOURCE}/envHadronic.sh
 #export NO_GENIE=1 #ALLOWS WCSIM TO BE BUILT WITHOUT GENIE
-export PATH=${GENIE}/bin:/home/annie/lhapdf-5.9.1/install/bin:/home/annie/fsplit/:${PATH}
-export LD_LIBRARY_PATH=/home/annie/WCSim/WCSim:${GENIE}/lib:/home/annie/lhapdf-5.9.1/install/lib:/home/annie/Pythia6Support/v6_424/lib:/home/annie/log4cpp/install/lib:$LD_LIBRARY_PATH
-export ROOT_INCLUDE_PATH=/home/annie/WCSim/WCSim/include:$ROOT_INCLUDE_PATH
+export PATH=${WCSIM_BUILD}:${GENIE}/bin:/home/annie/lhapdf-5.9.1/install/bin:/home/annie/fsplit/:${PATH}
+export LD_LIBRARY_PATH=${WCSIM_BUILD}:${GENIE}/lib:/home/annie/lhapdf-5.9.1/install/lib:/home/annie/Pythia6Support/v6_424/lib:/home/annie/log4cpp/install/lib:$LD_LIBRARY_PATH
+export ROOT_INCLUDE_PATH=${WCSIM_SOURCE}/include:$ROOT_INCLUDE_PATH
