@@ -23,7 +23,6 @@ This package is built and run inside the ANNIE WCSim Singularity container
 | Pythia6 | 6.4.24 | `/home/annie/Pythia6Support/v6_424` (GENIE dependency) |
 | LHAPDF | 5.9.1 | `/home/annie/lhapdf-5.9.1/install` (GENIE dependency) |
 | log4cpp | — | `/home/annie/log4cpp/install` (GENIE dependency) |
-| Python | 2.7.5 | |
 
 The neutron-HP environment variables (`G4NEUTRONHP_*`) are set by
 `envHadronic.sh`, which `sourceme` sources.
