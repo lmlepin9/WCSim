@@ -222,6 +222,10 @@ public:
   void   SetVis_Choice(G4String choice){Vis_Choice = choice;}
   G4String GetVis_Choice() {return Vis_Choice;}
 
+  // AmBeTagger options:
+  void SetIncludeAmBeTagger(G4bool choice){IncludeAmBeTagger = choice;}
+  G4bool GetIncludeAmBeTagger(){return IncludeAmBeTagger;}
+
   //Partition Length
   void SetwaterTank_Length(G4double length){waterTank_Length = length;}
   void SetWaterTubeLength(G4double length){WCLength = length;}
@@ -258,6 +262,9 @@ public:
     WCSimTuningParameters* Get_TuningParams(){return WCSimTuningParams;} 
 
 private:
+
+  // AmBeTagger Options
+  G4bool IncludeAmBeTagger; 
 
   // Tuning parameters
 

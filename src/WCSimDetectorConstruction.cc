@@ -85,6 +85,9 @@ WCSimDetectorConstruction::WCSimDetectorConstruction(G4int DetConfig,WCSimTuning
   //SetANNIEPhase2Geometryv6();
   SetANNIEPhase2Geometryv7();
 
+  // Set whether or not to include AmBeTagger
+  SetIncludeAmBeTagger(false);
+
   //----------------------------------------------------- 
   // Set whether or not Pi0-specific info is saved
   //-----------------------------------------------------

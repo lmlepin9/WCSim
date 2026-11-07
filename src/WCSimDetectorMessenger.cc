@@ -87,13 +87,19 @@ WCSimDetectorMessenger::WCSimDetectorMessenger(WCSimDetectorConstruction* WCSimD
   SavePi0->SetParameterName("SavePi0",false);
   SavePi0->SetCandidates("true false");
   SavePi0->AvailableForStates(G4State_PreInit, G4State_Idle);
-  
+
   SaveCapture = new G4UIcmdWithAString("/WCSim/SaveCapture", this);
   SaveCapture->SetGuidance("true or false");
   SaveCapture->SetParameterName("SaveCapture",false);
   SaveCapture->SetCandidates("true false");
   SaveCapture->AvailableForStates(G4State_PreInit, G4State_Idle);
-  
+
+  // Options for AmBeTagger:
+  IncludeAmBeTagger = new G4UIcmdWithABool("/WCSim/IncludeAmBeTagger",this);
+  IncludeAmBeTagger->SetGuidance("true or false | Add the AmBe tagger to the tank. After /run/initialize, follow with /WCSim/Construct");
+  IncludeAmBeTagger->SetParameterName("IncludeAmBeTagger",false);
+  IncludeAmBeTagger->AvailableForStates(G4State_PreInit, G4State_Idle);
+
   
   PMTQEMethod = new G4UIcmdWithAString("/WCSim/PMTQEMethod", this);
   PMTQEMethod->SetGuidance("Set the PMT configuration.");
@@ -202,11 +208,10 @@ WCSimDetectorMessenger::~WCSimDetectorMessenger()
   delete PMTCollEff;
   delete waterTank_Length;
   delete WCVisChoice;
-
   delete tubeCmd;
+  delete IncludeAmBeTagger;
   delete distortionCmd;
   delete WCSimDir;
-  
   delete WCConstruct;
 }
 
@@ -273,6 +278,11 @@ void WCSimDetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 	  }else{
 	    
 	  }
+	}
+
+	if (command == IncludeAmBeTagger){
+		G4cout << "Include AmBe Tagger geomtry: " << newValue << G4endl;
+		WCSimDetector->SetIncludeAmBeTagger(IncludeAmBeTagger->GetNewBoolValue(newValue));
 	}
 
 	if (command == SaveCapture){

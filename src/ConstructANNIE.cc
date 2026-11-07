@@ -242,6 +242,25 @@ G4LogicalVolume* WCSimDetectorConstruction::ConstructANNIE()
 				bordersurfaces.push_back(InnerStructureSurface_log);
 			}
 		}
+
+    /*
+    Here I should something like:
+
+    if(addAmBeTagger){
+      if(water_log==nullptr){
+				G4cerr<<"!!! could not find WCBarrel, inner structure will not be added !!!"<<G4endl;
+			}
+
+      else{
+      
+      
+      }
+
+    }
+    */
+
+
+
 	}
 
   // Add markers for debugging (only debugging)
