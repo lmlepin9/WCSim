@@ -222,9 +222,25 @@ public:
   void   SetVis_Choice(G4String choice){Vis_Choice = choice;}
   G4String GetVis_Choice() {return Vis_Choice;}
 
-  // AmBeTagger options:
+  // AmBeTagger options ------------------------------------------------------------
+  
   void SetIncludeAmBeTagger(G4bool choice){IncludeAmBeTagger = choice;}
   G4bool GetIncludeAmBeTagger(){return IncludeAmBeTagger;}
+
+  void SetTaggerPosition(G4ThreeVector pos){taggerPosition = pos;}
+  G4ThreeVector GetTaggerPosition(){return taggerPosition;}
+
+  // Rotation angles are applied about the mother (WCBarrel) axes: X first,
+  // then Y, then Z.
+  void SetTaggerRotation(G4ThreeVector angles){
+    taggerRotation = G4RotationMatrix();
+    taggerRotation.rotateX(angles.x());
+    taggerRotation.rotateY(angles.y());
+    taggerRotation.rotateZ(angles.z());
+  }
+  G4RotationMatrix GetTaggerRotation(){return taggerRotation;}
+
+  //--------------------------------------------------------------------------------
 
   //Partition Length
   void SetwaterTank_Length(G4double length){waterTank_Length = length;}
@@ -265,6 +281,8 @@ private:
 
   // AmBeTagger Options
   G4bool IncludeAmBeTagger; 
+  G4RotationMatrix taggerRotation;
+  G4ThreeVector taggerPosition; 
 
   // Tuning parameters
 
