@@ -301,7 +301,7 @@ void WCSimDetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 	}
 
 	if (command == IncludeAmBeTagger){
-		G4cout << "Include AmBe Tagger geomtry: " << newValue << G4endl;
+		G4cout << "Include AmBe Tagger geometry: " << newValue << G4endl;
 		WCSimDetector->SetIncludeAmBeTagger(IncludeAmBeTagger->GetNewBoolValue(newValue));
 	}
 

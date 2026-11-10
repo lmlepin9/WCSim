@@ -36,6 +36,9 @@
 #include "G4Trd.hh"
 #include "G4SystemOfUnits.hh"
 #include "SBsimMRDDB.hh"
+
+#include "AmBeTaggerGeometry.hh"
+
 static const G4double INCH = 2.54*cm;
 // *************/SciBooNE integration
 
@@ -283,6 +286,8 @@ private:
   G4bool IncludeAmBeTagger; 
   G4RotationMatrix taggerRotation;
   G4ThreeVector taggerPosition; 
+
+  AmBeTaggerGeometry AmBeTagger;
 
   // Tuning parameters
 

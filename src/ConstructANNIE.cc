@@ -249,12 +249,24 @@ G4LogicalVolume* WCSimDetectorConstruction::ConstructANNIE()
 
     if(IncludeAmBeTagger){
       if(water_log==nullptr){
-				G4cerr<<"!!! could not find WCBarrel, inner structure will not be added !!!"<<G4endl;
+				G4cerr<<"!!! could not find WCBarrel, AmBe tagger will not be added !!!"<<G4endl;
 			}
 
       else{
+        G4cout << "--------------------------------------------" << G4endl;
+        
         G4cout << "Including AmBe tagger geometry" << G4endl;
-      
+        G4cout << "Tagger position: " 
+        << taggerPosition.x() << ", " 
+        << taggerPosition.y() << ", "
+        << taggerPosition.z() << " [mm]" << G4endl;
+
+        G4cout << "--------------------------------------------" << G4endl;
+        AmBeTagger.Build(water_log,
+          taggerPosition,
+          taggerRotation);
+
+
       }
 
     }
