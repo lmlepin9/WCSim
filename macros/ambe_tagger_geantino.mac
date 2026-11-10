@@ -1,0 +1,49 @@
+# Geantino test for the AmBe tagger wiring in ConstructANNIE.
+#
+# Run from the build directory:
+#   tools/annie-run.sh 'cd $WCSIM_BUILD && WCSim $WCSIM_SOURCE/macros/ambe_tagger_geantino.mac' 2>&1 | tee geantino.log
+#
+# The flag is read when the geometry is built, which happens BEFORE this macro
+# runs. Enable it in $WCSIM_BUILD/macros/jobOptions.mac:
+#   /WCSim/AmBe/IncludeAmBeTagger true
+#   /WCSim/AmBe/TaggerPosition 0 0 0 cm
+#   /WCSim/AmBe/TaggerRotation 0 0 0 deg
+#
+# What to look for in the log:
+#   - "Including AmBe tagger geometry" during construction (flag on only).
+#   - In the step tables (column "NextVolume"): AmBe_* volume names once
+#     AmBeTaggerGeometry::Build() is called. With only the message wired, the
+#     geantinos cross water and the inner structure only.
+#
+# Geantinos do not interact, so each event is just a straight line of steps
+# through every volume boundary. /gun/position is in GLOBAL coordinates; the
+# tank centre (default BGO centre) is at (0, -144.65, 1681) mm.
+
+/run/verbose 1
+/tracking/verbose 1
+/hits/verbose 0
+/process/verbose 0
+/vis/disable
+
+/WCSim/PMTQEMethod   Multi_Tank_Types
+/WCSim/LAPPDQEMethod Multi_Tank_Types
+/WCSim/PMTCollEff on
+/control/execute macros/annie_daq.mac
+
+/mygen/generator gun
+/gun/particle geantino
+/gun/energy 1 MeV
+/WCSimIO/RootFile ambe_tagger_geantino
+
+# Event 1: horizontal (+x), at BGO height, through the tagger.
+# Expected crossings: housing PVC -> cavity air -> wrap -> BGO -> ... -> out.
+/gun/position -500 -144.65 1681 mm
+/gun/direction 1 0 0
+/run/beamOn 1
+
+# Event 2: vertical (+y, up), along the tagger axis.
+# Expected order (PMT up): housing back -> cavity -> source capsule/AmBe ->
+# source shield -> BGO -> coupling -> PMT window -> PMT -> readout holder -> housing tip.
+/gun/position 0 -1000 1681 mm
+/gun/direction 0 1 0
+/run/beamOn 1

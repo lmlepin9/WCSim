@@ -80,6 +80,9 @@
 #include "WCSimPMTObject.hh"
 #include "WCSimLAPPDObject.hh"
 
+// AmBeTagger
+#include "AmBeTaggerGeometry.hh"
+
 #ifdef ENABLE_CADMESH
 #include "CADMesh.hh"
 #endif
@@ -243,24 +246,19 @@ G4LogicalVolume* WCSimDetectorConstruction::ConstructANNIE()
 			}
 		}
 
-    /*
-    Here I should something like:
 
-    if(addAmBeTagger){
+    if(IncludeAmBeTagger){
       if(water_log==nullptr){
 				G4cerr<<"!!! could not find WCBarrel, inner structure will not be added !!!"<<G4endl;
 			}
 
       else{
-      
+        G4cout << "Including AmBe tagger geometry" << G4endl;
       
       }
 
     }
-    */
-
-
-
+  
 	}
 
   // Add markers for debugging (only debugging)
