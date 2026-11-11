@@ -229,6 +229,7 @@ public:
   
   void SetIncludeAmBeTagger(G4bool choice){IncludeAmBeTagger = choice;}
   G4bool GetIncludeAmBeTagger(){return IncludeAmBeTagger;}
+  G4LogicalVolume* GetBGOScoringVol() const {return IncludeAmBeTagger ? AmBeTagger.GetScoringVolume() : nullptr;}
 
   void SetTaggerPosition(G4ThreeVector pos){taggerPosition = pos;}
   G4ThreeVector GetTaggerPosition(){return taggerPosition;}

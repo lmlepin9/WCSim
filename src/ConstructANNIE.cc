@@ -266,7 +266,6 @@ G4LogicalVolume* WCSimDetectorConstruction::ConstructANNIE()
           taggerPosition,
           taggerRotation);
 
-
       }
 
     }

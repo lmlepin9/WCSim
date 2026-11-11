@@ -9,11 +9,15 @@
 class G4HCofThisEvent;
 class G4Event;
 
+class WCSimEventAction; 
+class WCSimDetectorConstruction;
+
 class WCSimSteppingAction : public G4UserSteppingAction
 {
 
 public:
-  WCSimSteppingAction() : fExpectedNextStatus(Undefined)
+  WCSimSteppingAction(WCSimEventAction* EventAction, const WCSimDetectorConstruction* DetectorConstruction) : 
+  fExpectedNextStatus(Undefined), EventAction_(EventAction), DetectorConstruction_(DetectorConstruction)
   {};
 
   ~WCSimSteppingAction()
@@ -34,12 +38,14 @@ public:
 		      G4int xy);
 
 private:
-
   G4double ret[2];
   G4OpBoundaryProcessStatus fExpectedNextStatus;
   G4String ToName(G4OpBoundaryProcessStatus boundaryStatus);
   G4String ToName2(G4StepStatus stepStatus);
 
+    // Addons for AmBeTagger
+  WCSimEventAction* EventAction_; 
+  const WCSimDetectorConstruction* DetectorConstruction_; 
 };
 
 

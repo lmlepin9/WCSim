@@ -3,6 +3,9 @@
 #include <stdio.h>
 
 #include "WCSimSteppingAction.hh"
+#include "WCSimEventAction.hh"
+#include "WCSimDetectorConstruction.hh"
+
 #include "G4ParticleDefinition.hh"
 #include "G4ParticleTypes.hh"
 #include "G4Track.hh"
@@ -15,6 +18,7 @@
 #include "G4SDManager.hh"
 #include "G4RunManager.hh"
 #include "G4OpBoundaryProcess.hh"
+
 
 
 void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
