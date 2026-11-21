@@ -18,6 +18,8 @@
 #include "G4SDManager.hh"
 #include "G4RunManager.hh"
 #include "G4OpBoundaryProcess.hh"
+#include "G4LossTableManager.hh"
+#include "G4EmSaturation.hh"
 
 
 
@@ -31,9 +33,31 @@ void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
   G4VPhysicalVolume* prePhysicalVolume =
       aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume();
 
-  if(prePhysicalVolume->GetLogicalVolume()==DetectorConstruction_->GetBGOScoringVol() &&
-    track->GetDefinition() != G4OpticalPhoton::Definition()){
+  if(prePhysicalVolume->GetLogicalVolume()==DetectorConstruction_->GetBGOScoringVol()){
+    if(track->GetDefinition() != G4OpticalPhoton::Definition()){
       EventAction_->AddBGOEnergyDeposit(aStep->GetTotalEnergyDeposit());
+      // Birks-quenched energy, computed with the same call G4Scintillation
+      // uses when a saturation model is attached to it
+      EventAction_->AddBGOVisibleEnergy(
+          G4LossTableManager::Instance()->EmSaturation()->VisibleEnergyDeposition(aStep));
+
+      // Optical photons created in the BGO during this step, before any
+      // culling in WCSimStackingAction
+      const std::vector<const G4Track*>* secondaries = aStep->GetSecondaryInCurrentStep();
+      for(size_t i = 0; i < secondaries->size(); ++i){
+        const G4Track* secondary = (*secondaries)[i];
+        if(secondary->GetDefinition() != G4OpticalPhoton::Definition()) continue;
+        const G4VProcess* creator = secondary->GetCreatorProcess();
+        if(!creator) continue;
+        if(creator->GetProcessName() == "Scintillation") EventAction_->AddBGOScintPhoton();
+        else if(creator->GetProcessName() == "Cerenkov") EventAction_->AddBGOCherPhoton();
+      }
+    }
+    // First step of a photon that starts in the BGO: it was born there and
+    // survived the stacking action (killed photons never take a step)
+    else if(track->GetCurrentStepNumber() == 1){
+      EventAction_->AddBGOTrackedPhoton();
+    }
   }
 
   //G4VPhysicalVolume* thePrePV = aStep->GetPreStepPoint()->GetPhysicalVolume();

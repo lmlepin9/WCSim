@@ -38,7 +38,15 @@ WCSimRunAction::WCSimRunAction(WCSimDetectorConstruction* test, WCSimRandomParam
   OutputFileNum=-1;
   WCSimTree=0;
   bgo_edep=0.;
+  bgo_evis=0.;
+  bgo_nscint_created=0;
+  bgo_ncher_created=0;
+  bgo_nphot_tracked=0;
   bgoedepbranch=0;
+  bgoevisbranch=0;
+  bgonscintbranch=0;
+  bgoncherbranch=0;
+  bgonphottrackedbranch=0;
 
   wcsimrootoptions = new WCSimRootOptions();
   wcsimrootoptions->PopulateFileVersion();   // read from files and/or git the WCSimVersion and git commit hash
@@ -106,10 +114,18 @@ void WCSimRunAction::CreateNewOutputFile(){
   if(isANNIE){
     wcsimrooteventbranch_mrd = WCSimTree->Branch("wcsimrootevent_mrd", "WCSimRootEvent", &wcsimrootsuperevent_mrd, bufsize,2);
     wcsimrooteventbranch_facc = WCSimTree->Branch("wcsimrootevent_facc", "WCSimRootEvent", &wcsimrootsuperevent_facc, bufsize,2);
-    // The old branch (if any) was deleted with the previous file, so reset the handle
+    // The old branches (if any) were deleted with the previous file, so reset the handles
     bgoedepbranch = 0;
+    bgoevisbranch = 0;
+    bgonscintbranch = 0;
+    bgoncherbranch = 0;
+    bgonphottrackedbranch = 0;
     if(wcsimdetector->GetIncludeAmBeTagger()){
       bgoedepbranch = WCSimTree->Branch("bgo_edep", &bgo_edep, "bgo_edep/D");
+      bgoevisbranch = WCSimTree->Branch("bgo_evis", &bgo_evis, "bgo_evis/D");
+      bgonscintbranch = WCSimTree->Branch("bgo_nscint_created", &bgo_nscint_created, "bgo_nscint_created/I");
+      bgoncherbranch = WCSimTree->Branch("bgo_ncher_created", &bgo_ncher_created, "bgo_ncher_created/I");
+      bgonphottrackedbranch = WCSimTree->Branch("bgo_nphot_tracked", &bgo_nphot_tracked, "bgo_nphot_tracked/I");
     }
 
   }

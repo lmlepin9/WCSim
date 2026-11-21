@@ -56,6 +56,13 @@ public:
 
   // Addition for AmBeTagger: BGO Energy deposit
   void AddBGOEnergyDeposit(G4double energy_deposit){BGOedep+=energy_deposit;}
+  // AmBeTagger: Birks-quenched (visible) BGO energy deposit
+  void AddBGOVisibleEnergy(G4double visible_energy){BGOevis+=visible_energy;}
+  // AmBeTagger: optical photons created in the BGO, and those of them that were
+  // tracked (i.e. not killed by the QE culling in WCSimStackingAction)
+  void AddBGOScintPhoton(){ BGOnScint++; }
+  void AddBGOCherPhoton(){ BGOnCher++; }
+  void AddBGOTrackedPhoton(){ BGOnTracked++; }
 
 private:
 
@@ -74,6 +81,11 @@ private:
 
   // Addition for AmBeTagger: BGO Energy deposit
   G4double BGOedep;
+  G4double BGOevis;
+  // AmBeTagger: BGO optical photon counters
+  G4int BGOnScint;
+  G4int BGOnCher;
+  G4int BGOnTracked;
 
   // Additions for truth hit readout of LAPPDs
   //==========================================

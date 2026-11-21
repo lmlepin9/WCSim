@@ -36,9 +36,22 @@ public:
     else if(detectorElement=="mrd")  return wcsimrooteventbranch_mrd;
     else if(detectorElement=="facc") return wcsimrooteventbranch_facc;
     else G4cout<<"Unkown detector element"<<G4endl;}
-  // AmBe tagger: per-event BGO energy deposit branch (0 when the tagger is off)
-  TBranch* GetBGOEdepBranch(){ return bgoedepbranch; }
-  void SetBGOEdep(double edepMeV){ bgo_edep = edepMeV; }
+  // AmBe tagger: per-event BGO branches (only created when the tagger is on)
+  void SetBGOEventData(double edepMeV, double evisMeV, int nScint, int nCher, int nTracked){
+    bgo_edep = edepMeV;
+    bgo_evis = evisMeV;
+    bgo_nscint_created = nScint;
+    bgo_ncher_created = nCher;
+    bgo_nphot_tracked = nTracked;
+  }
+  // Must be called exactly once per event: wcsimT is filled branch by branch.
+  void FillBGOBranches(){
+    if(bgoedepbranch) bgoedepbranch->Fill();
+    if(bgoevisbranch) bgoevisbranch->Fill();
+    if(bgonscintbranch) bgonscintbranch->Fill();
+    if(bgoncherbranch) bgoncherbranch->Fill();
+    if(bgonphottrackedbranch) bgonphottrackedbranch->Fill();
+  }
   TTree* GetGeoTree(){return geoTree;}
   TTree* GetOptionsTree(){return optionsTree;}
   WCSimRootGeom* GetRootGeom(){return wcsimrootgeom;}
@@ -93,7 +106,16 @@ private:
 
   // AmBe stuff
   double bgo_edep;          // total BGO energy deposit of the event [MeV]
-  TBranch* bgoedepbranch;   // 0 when the tagger is off
+  double bgo_evis;          // Birks-quenched (visible) BGO energy deposit [MeV]
+  int bgo_nscint_created;  // scintillation photons created in the BGO
+  int bgo_ncher_created;    // Cherenkov photons created in the BGO
+  int bgo_nphot_tracked;    // BGO-born photons that survived the stacking action
+  // Branch handles, 0 when the tagger is off
+  TBranch* bgoedepbranch;
+  TBranch* bgoevisbranch;
+  TBranch* bgonscintbranch;
+  TBranch* bgoncherbranch;
+  TBranch* bgonphottrackedbranch;
 
   int numberOfEventsGenerated;
   int numberOfTimesWaterTubeHit;
