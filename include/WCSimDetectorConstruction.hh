@@ -231,6 +231,10 @@ public:
   G4bool GetIncludeAmBeTagger(){return IncludeAmBeTagger;}
   G4LogicalVolume* GetBGOScoringVol() const {return IncludeAmBeTagger ? AmBeTagger.GetScoringVolume() : nullptr;}
 
+  // Debug: skip stacking-level QE culling for primary optical photons
+  void SetBypassQEForPrimaryPhotons(G4bool choice){BypassQEForPrimaryPhotons = choice;}
+  G4bool GetBypassQEForPrimaryPhotons() const {return BypassQEForPrimaryPhotons;}
+
   void SetTaggerPosition(G4ThreeVector pos){taggerPosition = pos;}
   G4ThreeVector GetTaggerPosition(){return taggerPosition;}
 
@@ -285,6 +289,7 @@ private:
 
   // AmBeTagger Options
   G4bool IncludeAmBeTagger; 
+  G4bool BypassQEForPrimaryPhotons;
   G4RotationMatrix taggerRotation;
   G4ThreeVector taggerPosition; 
 

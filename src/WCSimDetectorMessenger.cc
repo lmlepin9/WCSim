@@ -117,6 +117,12 @@ WCSimDetectorMessenger::WCSimDetectorMessenger(WCSimDetectorConstruction* WCSimD
   taggerRotation->SetUnitCategory("Angle");
   taggerRotation->AvailableForStates(G4State_PreInit, G4State_Idle);
 
+  bypassQEForPrimaryPhotons = new G4UIcmdWithABool("/WCSim/AmBe/BypassQEForPrimaryPhotons",this);
+  bypassQEForPrimaryPhotons->SetGuidance("true or false | Debug: do not apply stacking-level QE culling to primary optical photons (e.g. photon gun aimed at the tagger PMT). Default: false");
+  bypassQEForPrimaryPhotons->SetParameterName("BypassQEForPrimaryPhotons",true);
+  bypassQEForPrimaryPhotons->SetDefaultValue(false);
+  bypassQEForPrimaryPhotons->AvailableForStates(G4State_PreInit, G4State_Idle);
+
   //-----------------------------------------------------------------
   PMTQEMethod = new G4UIcmdWithAString("/WCSim/PMTQEMethod", this);
   PMTQEMethod->SetGuidance("Set the PMT configuration.");
@@ -229,6 +235,7 @@ WCSimDetectorMessenger::~WCSimDetectorMessenger()
   delete IncludeAmBeTagger;
   delete taggerPosition;
   delete taggerRotation;
+  delete bypassQEForPrimaryPhotons;
   delete AmBeDir;
   delete distortionCmd;
   delete WCSimDir;
@@ -311,6 +318,11 @@ void WCSimDetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 
 	if (command==taggerRotation){
 		WCSimDetector->SetTaggerRotation(taggerRotation->GetNew3VectorValue(newValue));
+	}
+
+	if (command == bypassQEForPrimaryPhotons){
+		G4cout << "Bypass stacking QE for primary optical photons: " << newValue << G4endl;
+		WCSimDetector->SetBypassQEForPrimaryPhotons(bypassQEForPrimaryPhotons->GetNewBoolValue(newValue));
 	}
 
 	if (command == SaveCapture){
