@@ -54,7 +54,11 @@ public:
   G4bool isANNIE;
   void CreateNewLAPPDFile();
 
+  // Addition for AmBeTagger: BGO Energy deposit
+  void AddBGOEnergyDeposit(G4double energy_deposit){BGOedep+=energy_deposit;}
+
 private:
+
   G4int WCSimEventFindStartingVolume( G4ThreeVector vtx);
   G4int WCSimEventFindStoppingVolume( G4String stopVolumeName);
   G4int WCSimEventFindVertexVolume(G4ThreeVector vtx);
@@ -66,7 +70,11 @@ private:
   std::map<std::string, std::string> TriggerChoices;
   bool     ConstructedDAQClasses;
   bool     SavedOptions;
-  
+
+
+  // Addition for AmBeTagger: BGO Energy deposit
+  G4double BGOedep;
+
   // Additions for truth hit readout of LAPPDs
   //==========================================
   G4int eventcount;

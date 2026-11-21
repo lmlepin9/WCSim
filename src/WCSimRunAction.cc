@@ -37,6 +37,8 @@ WCSimRunAction::WCSimRunAction(WCSimDetectorConstruction* test, WCSimRandomParam
   messenger = new WCSimRunActionMessenger(this);
   OutputFileNum=-1;
   WCSimTree=0;
+  bgo_edep=0.;
+  bgoedepbranch=0;
 
   wcsimrootoptions = new WCSimRootOptions();
   wcsimrootoptions->PopulateFileVersion();   // read from files and/or git the WCSimVersion and git commit hash
@@ -104,6 +106,12 @@ void WCSimRunAction::CreateNewOutputFile(){
   if(isANNIE){
     wcsimrooteventbranch_mrd = WCSimTree->Branch("wcsimrootevent_mrd", "WCSimRootEvent", &wcsimrootsuperevent_mrd, bufsize,2);
     wcsimrooteventbranch_facc = WCSimTree->Branch("wcsimrootevent_facc", "WCSimRootEvent", &wcsimrootsuperevent_facc, bufsize,2);
+    // The old branch (if any) was deleted with the previous file, so reset the handle
+    bgoedepbranch = 0;
+    if(wcsimdetector->GetIncludeAmBeTagger()){
+      bgoedepbranch = WCSimTree->Branch("bgo_edep", &bgo_edep, "bgo_edep/D");
+    }
+
   }
   
   // Geometry tree - store a copy in each output file (a bit redundant but safer and doesn't take much space)

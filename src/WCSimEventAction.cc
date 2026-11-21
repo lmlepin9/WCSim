@@ -83,7 +83,7 @@ WCSimEventAction::WCSimEventAction(WCSimRunAction* myRun,
 				   WCSimPrimaryGeneratorAction* myGenerator)
   :runAction(myRun), generatorAction(myGenerator), 
    detectorConstructor(myDetector),
-   ConstructedDAQClasses(false), LAPPDfile(0), SavedOptions(false)
+   ConstructedDAQClasses(false), LAPPDfile(0), SavedOptions(false), BGOedep(0.)
 {
   DAQMessenger = new WCSimWCDAQMessenger(this);
   DAQMessenger->AddDAQMessengerInstance("tank");
@@ -321,12 +321,19 @@ void WCSimEventAction::BeginOfEventAction(const G4Event* evt)
   
   // equivalent of beginrunaction using event id
   if(isANNIE&&(evt->GetEventID()==0)){ CreateNewLAPPDFile(); }
+
+  // Reset BGO energy dep
+  BGOedep=0. * MeV;
 }
 
 void WCSimEventAction::EndOfEventAction(const G4Event* evt)
 {
   G4cout<<G4endl;
   G4cout<<"############# WCSIM  BEGIN END OF EVENT ACTION  ################"<<G4endl;
+
+  G4cout<<"Total energy deposited in the BGO: " << BGOedep/MeV << " MeV"  << G4endl;
+
+
   G4int         event_id = evt->GetEventID();
   // ----------------------------------------------------------------------
   //  Get Particle Table
@@ -1088,6 +1095,14 @@ void WCSimEventAction::EndOfEventAction(const G4Event* evt)
 		"facc");
 	}
   
+  // AmBe tagger: fill the BGO energy deposit branch once per event, like the
+  // WCSimRootEvent branches, before the entry count is set and the tree written.
+  TBranch* bgoedepbranch = GetRunAction()->GetBGOEdepBranch();
+  if(bgoedepbranch){
+    GetRunAction()->SetBGOEdep(BGOedep/MeV);
+    bgoedepbranch->Fill();
+  }
+
   TTree* tree = GetRunAction()->GetTree();
   TBranch* tankeventbranch = tree->GetBranch("wcsimrootevent");
   tree->SetEntries(tankeventbranch->GetEntries());

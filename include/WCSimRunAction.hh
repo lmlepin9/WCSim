@@ -36,6 +36,9 @@ public:
     else if(detectorElement=="mrd")  return wcsimrooteventbranch_mrd;
     else if(detectorElement=="facc") return wcsimrooteventbranch_facc;
     else G4cout<<"Unkown detector element"<<G4endl;}
+  // AmBe tagger: per-event BGO energy deposit branch (0 when the tagger is off)
+  TBranch* GetBGOEdepBranch(){ return bgoedepbranch; }
+  void SetBGOEdep(double edepMeV){ bgo_edep = edepMeV; }
   TTree* GetGeoTree(){return geoTree;}
   TTree* GetOptionsTree(){return optionsTree;}
   WCSimRootGeom* GetRootGeom(){return wcsimrootgeom;}
@@ -87,6 +90,10 @@ private:
   WCSimRootOptions* wcsimrootoptions;
   WCSimDetectorConstruction* wcsimdetector;
   WCSimRandomParameters* wcsimrandomparameters;
+
+  // AmBe stuff
+  double bgo_edep;          // total BGO energy deposit of the event [MeV]
+  TBranch* bgoedepbranch;   // 0 when the tagger is off
 
   int numberOfEventsGenerated;
   int numberOfTimesWaterTubeHit;

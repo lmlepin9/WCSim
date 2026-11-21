@@ -26,6 +26,19 @@ void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
   //return;    // disable while investigating differences in validation plots.
 
   G4Track* track = aStep->GetTrack();
+
+  // Draft for AmBe
+  G4VPhysicalVolume* prePhysicalVolume =
+      aStep->GetPreStepPoint()->GetTouchableHandle()->GetVolume();
+
+  if(prePhysicalVolume->GetLogicalVolume()==DetectorConstruction_->GetBGOScoringVol() &&
+    track->GetDefinition() != G4OpticalPhoton::Definition()){
+      EventAction_->AddBGOEnergyDeposit(aStep->GetTotalEnergyDeposit());
+  }
+
+  //G4VPhysicalVolume* thePrePV = aStep->GetPreStepPoint()->GetPhysicalVolume();
+
+
 //  G4VPhysicalVolume* thePostPV = aStep->GetPostStepPoint()->GetPhysicalVolume();
 
   // For estimating tank energy loss vs digits, need an accurate energy on tank exit - kill particle on
