@@ -22,10 +22,17 @@ public:
   // Valid after Build(); needed later for the sensitive detectors.
   G4LogicalVolume* GetScoringVolume() const { return scoringVolume_; }
   G4LogicalVolume* GetPmtPlaneVolume() const { return pmtPlaneVolume_; }
+  // PMT parts around the photocathode, for light-path diagnostics.
+  G4LogicalVolume* GetPmtWindowVolume() const { return pmtWindowVolume_; }
+  G4LogicalVolume* GetPmtEnvelopeVolume() const { return pmtEnvelopeVolume_; }
+  G4LogicalVolume* GetPmtVacuumVolume() const { return pmtVacuumVolume_; }
 
 private:
   G4LogicalVolume* scoringVolume_ = nullptr;
   G4LogicalVolume* pmtPlaneVolume_ = nullptr;
+  G4LogicalVolume* pmtWindowVolume_ = nullptr;
+  G4LogicalVolume* pmtEnvelopeVolume_ = nullptr;
+  G4LogicalVolume* pmtVacuumVolume_ = nullptr;
 };
 
 #endif

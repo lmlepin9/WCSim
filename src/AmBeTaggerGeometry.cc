@@ -385,6 +385,24 @@ void DefineMaterials()
       photonEnergy,
       whitePvcAbsorptionLengthValues);
   whitePvc->SetMaterialPropertiesTable(whitePvcMaterialMpt);
+
+  // PMT interior. Own copy of G4_Galactic so RINDEX does not leak into WCSim
+  // volumes made of G4_Galactic. Without RINDEX, photons entering the vacuum
+  // would be killed at the boundary (NoRINDEX) instead of refracting.
+  G4Material* nistGalactic = nist->FindOrBuildMaterial("G4_Galactic");
+  G4Material* vacuum = new G4Material(
+      "AmBe_Vacuum",
+      nistGalactic->GetDensity(),
+      1,
+      kStateGas,
+      nistGalactic->GetTemperature(),
+      nistGalactic->GetPressure());
+  vacuum->AddMaterial(nistGalactic, 1.0);
+
+  G4MaterialPropertiesTable* vacuumMpt = new G4MaterialPropertiesTable;
+  AddVectorProperty(vacuumMpt, "RINDEX", photonEnergy, airRefractiveIndex);
+  AddVectorProperty(vacuumMpt, "ABSLENGTH", photonEnergy, airAbsorptionLength);
+  vacuum->SetMaterialPropertiesTable(vacuumMpt);
 }
 }
 
@@ -408,6 +426,7 @@ G4LogicalVolume* AmBeTaggerGeometry::Build(
       G4Material::GetMaterial("AmBe_PolyurethaneFoam");
   G4Material* stainlessSteel = G4Material::GetMaterial("AmBe_StainlessSteel");
   G4Material* whitePvc = G4Material::GetMaterial("AmBe_WhitePVC");
+  G4Material* vacuum = G4Material::GetMaterial("AmBe_Vacuum");
   G4Material* teflon =
       G4NistManager::Instance()->FindOrBuildMaterial("G4_TEFLON");
 
@@ -456,11 +475,17 @@ G4LogicalVolume* AmBeTaggerGeometry::Build(
   // daughter is placed.
   const G4double bgoHalfLengthZ = 2.5 * cm;
 
+  // PTFE wrap around the BGO (barrel and both caps). The reflection is set by
+  // the wrapSurface REFLECTIVITY, not by this thickness; it is kept thin so
+  // the front cap barely touches the coupling rim (no PTFE RINDEX there).
+  const G4double wrapThickness = 0.01 * mm;
+
   const G4double sourceShieldRadius = 26.025 * mm;
   const G4double sourceShieldHalfThickness = 0.5 * 11.63 * mm;
   const G4double sourceCapsuleHalfLength = 5.0 * mm;
+  // Steel disk flush against the PTFE back cap.
   const G4double sourceShieldFrontZ =
-      -bgoHalfLengthZ - 0.25 * mm;
+      -bgoHalfLengthZ - wrapThickness;
   const G4double sourceShieldZ =
       sourceShieldFrontZ - sourceShieldHalfThickness;
   const G4double sourceShieldBackZ =
@@ -562,7 +587,7 @@ G4LogicalVolume* AmBeTaggerGeometry::Build(
       "AmBe_CavityLogical");
   cavityLogical->SetVisAttributes(G4VisAttributes::GetInvisible());
 
-  new G4PVPlacement(
+  G4VPhysicalVolume* cavityPhysical = new G4PVPlacement(
       nullptr,
       G4ThreeVector(0.0, 0.0, cavityCentreZ),
       cavityLogical,
@@ -728,7 +753,6 @@ G4LogicalVolume* AmBeTaggerGeometry::Build(
   wrapSurface->SetModel(glisur);
   wrapSurface->SetMaterialPropertiesTable(wrapMpt);
 
-  const G4double wrapThickness = 0.25 * mm;
   const G4double wrapOuterRadius = bgoMaxRadius + wrapThickness;
   const G4double wrapHalfThickness = 0.5 * wrapThickness;
   const G4double pmtWindowRadius = 14.25 * mm;
@@ -873,6 +897,7 @@ G4LogicalVolume* AmBeTaggerGeometry::Build(
       pmtWindowSolid,
       pmtWindowMaterial,
       "PmtWindowLogical");
+  pmtWindowVolume_ = pmtWindowLogical;
   pmtWindowLogical->SetVisAttributes(
       MakeVisAttributes(G4Colour(0.0, 0.82, 0.95, 0.45)));
 
@@ -886,11 +911,89 @@ G4LogicalVolume* AmBeTaggerGeometry::Build(
       0,
       true);
 
+  // PMT: Hamamatsu R1398-04 (28 mm / 1-1/8" head-on, bialkali, UV-glass
+  // window, HA coating with magnetic shield). From the datasheet:
+  //   envelope diameter B = 28.5 +- 0.5 mm          -> pmtEnvelopeRadius
+  //   minimum effective photocathode diameter 25 mm -> pmtPlaneRadius
+  //   outer diameter with shield A = 30.5 mm max    -> not modelled (below)
+  //   length 98 +- 2 mm (pins excluded), HA coating and shield over 82 mm
+  // Wall and back-plate thicknesses are not on the datasheet; the values
+  // below are assumptions.
+  const G4double pmtWindowBackZ =
+      bgoFrontZ + 2.0 * couplingHalfThickness + 2.0 * pmtWindowHalfThickness;
+
+  // Glass envelope behind the window: borosilicate cylinder of the window
+  // radius with a vacuum inside (the window is its front wall). Kept at
+  // 100 mm (window + envelope = 101 mm, datasheet 98 +- 2 mm) so the readout
+  // holder, positioned from the PMT back face, does not move.
+  const G4double pmtEnvelopeRadius = pmtWindowRadius;
+  const G4double pmtEnvelopeWallThickness = 0.8 * mm;  // assumption
+  const G4double pmtEnvelopeBackThickness = 0.8 * mm;  // assumption
+  const G4double pmtBodyHalfLength = 50.0 * mm;
+  const G4double pmtBodyZ = pmtWindowBackZ + pmtBodyHalfLength;
+
+  G4Tubs* pmtEnvelopeSolid = new G4Tubs(
+      "PmtEnvelopeSolid",
+      0.0 * cm,
+      pmtEnvelopeRadius,
+      pmtBodyHalfLength,
+      0.0 * deg,
+      360.0 * deg);
+
+  G4LogicalVolume* pmtEnvelopeLogical = new G4LogicalVolume(
+      pmtEnvelopeSolid,
+      pmtBodyMaterial,
+      "PmtEnvelopeLogical");
+  pmtEnvelopeVolume_ = pmtEnvelopeLogical;
+  pmtEnvelopeLogical->SetVisAttributes(
+      MakeVisAttributes(G4Colour(0.18, 0.22, 0.28, 0.42)));
+
+  G4VPhysicalVolume* pmtEnvelopePhysical = new G4PVPlacement(
+      nullptr,
+      inCavity(pmtBodyZ),
+      pmtEnvelopeLogical,
+      "PmtEnvelopePhysical",
+      cavityLogical,
+      false,
+      0,
+      true);
+
+  // Vacuum: open towards the window (front face flush with the envelope front
+  // face), closed by the side wall and the back plate.
+  const G4double pmtVacuumRadius =
+      pmtEnvelopeRadius - pmtEnvelopeWallThickness;
+  const G4double pmtVacuumHalfLength =
+      pmtBodyHalfLength - 0.5 * pmtEnvelopeBackThickness;
+
+  G4Tubs* pmtVacuumSolid = new G4Tubs(
+      "PmtVacuumSolid",
+      0.0 * cm,
+      pmtVacuumRadius,
+      pmtVacuumHalfLength,
+      0.0 * deg,
+      360.0 * deg);
+
+  G4LogicalVolume* pmtVacuumLogical = new G4LogicalVolume(
+      pmtVacuumSolid,
+      vacuum,
+      "PmtVacuumLogical");
+  pmtVacuumVolume_ = pmtVacuumLogical;
+  pmtVacuumLogical->SetVisAttributes(G4VisAttributes::GetInvisible());
+
+  new G4PVPlacement(
+      nullptr,
+      G4ThreeVector(0.0, 0.0, -0.5 * pmtEnvelopeBackThickness),
+      pmtVacuumLogical,
+      "PmtVacuumPhysical",
+      pmtEnvelopeLogical,
+      false,
+      0,
+      true);
+
+  // Readout plane (photocathode): effective area, inside the vacuum and in
+  // contact with the window back face. Photons are counted on entry.
   const G4double pmtPlaneRadius = 12.5 * mm;
   const G4double pmtPlaneHalfThickness = 0.005 * mm;
-  const G4double pmtPlaneZ =
-      bgoFrontZ + 2.0 * couplingHalfThickness
-      + 2.0 * pmtWindowHalfThickness + pmtPlaneHalfThickness;
 
   G4Tubs* pmtPlaneSolid = new G4Tubs(
       "PmtPlaneSolid",
@@ -909,45 +1012,57 @@ G4LogicalVolume* AmBeTaggerGeometry::Build(
 
   new G4PVPlacement(
       nullptr,
-      inCavity(pmtPlaneZ),
+      G4ThreeVector(0.0, 0.0, -pmtVacuumHalfLength + pmtPlaneHalfThickness),
       pmtPlaneVolume_,
       "PmtPlanePhysical",
-      cavityLogical,
+      pmtVacuumLogical,
       false,
       0,
       true);
 
-  const G4double pmtBodyRadius = 12.25 * mm;
-  const G4double pmtBodyHalfLength = 50.0 * mm;
-  const G4double pmtBodyZ =
-      pmtPlaneZ + pmtPlaneHalfThickness + pmtBodyHalfLength;
+  // HA coating: conductive coating on the outer side of the bulb, treated as
+  // an absorber for light leaving the envelope glass. Only the envelope ->
+  // cavity direction is coated; the inner wall and the window joint are not.
+  // The reflectivity is an assumption.
+  constexpr G4double haCoatingReflectivity = 0.05;
+  const std::vector<G4double> haCoatingReflectivityValues(
+      n_entries,
+      haCoatingReflectivity);
+  const std::vector<G4double> haCoatingEfficiencyValues(n_entries, 0.0);
 
-  G4Tubs* pmtBodySolid = new G4Tubs(
-      "PmtBodySolid",
-      0.0 * cm,
-      pmtBodyRadius,
-      pmtBodyHalfLength,
-      0.0 * deg,
-      360.0 * deg);
+  G4MaterialPropertiesTable* haCoatingMpt = new G4MaterialPropertiesTable;
+  AddVectorProperty(
+      haCoatingMpt,
+      "REFLECTIVITY",
+      photonEnergy,
+      haCoatingReflectivityValues);
+  AddVectorProperty(
+      haCoatingMpt,
+      "EFFICIENCY",
+      photonEnergy,
+      haCoatingEfficiencyValues);
 
-  G4LogicalVolume* pmtBodyLogical = new G4LogicalVolume(
-      pmtBodySolid,
-      pmtBodyMaterial,
-      "PmtBodyLogical");
-  pmtBodyLogical->SetVisAttributes(
-      MakeVisAttributes(G4Colour(0.18, 0.22, 0.28, 0.42)));
+  G4OpticalSurface* haCoatingSurface =
+      new G4OpticalSurface("PmtHACoatingSurface");
+  haCoatingSurface->SetType(dielectric_metal);
+  haCoatingSurface->SetFinish(polished);
+  haCoatingSurface->SetModel(glisur);
+  haCoatingSurface->SetMaterialPropertiesTable(haCoatingMpt);
 
-  new G4PVPlacement(
-      nullptr,
-      inCavity(pmtBodyZ),
-      pmtBodyLogical,
-      "PmtBodyPhysical",
-      cavityLogical,
-      false,
-      0,
-      true);
+  new G4LogicalBorderSurface(
+      "PmtEnvelopeToCavityHACoatingSurface",
+      pmtEnvelopePhysical,
+      cavityPhysical,
+      haCoatingSurface);
 
-  const G4double pmtFoamInnerRadius = 14.29 * mm;
+  // The R1398-04 magnetic shield (mu-metal over the first 82 mm, phi 30.5 mm
+  // max with its insulating cover) is intentionally not modelled: there is
+  // no magnetic field in the simulation, it sits outside the absorbing HA
+  // coating, and its ~30 g of Ni-Fe is negligible for gammas and neutrons.
+
+  // Foam support around the PMT; the bore (an approximation) clears the
+  // glass envelope by 0.04 mm.
+  const G4double pmtFoamInnerRadius = pmtEnvelopeRadius + 0.04 * mm;
   const G4double pmtFoamOuterRadius = 26.025 * mm;
 
   G4Tubs* pmtFoamSolid = new G4Tubs(
