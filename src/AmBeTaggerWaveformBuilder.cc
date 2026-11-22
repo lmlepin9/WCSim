@@ -44,6 +44,7 @@ std::vector<G4double> WaveformBuilder::Build(
           * singlePE_.Amplitude(time - photoelectronTimes[i]);
     }
   }
+  
 
   return waveform;
 }

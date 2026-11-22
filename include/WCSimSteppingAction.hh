@@ -5,6 +5,7 @@
 #include "G4UserSteppingAction.hh"
 #include "G4ThreeVector.hh"
 #include "G4OpBoundaryProcess.hh"
+#include "AmBeTaggerPmtResponse.hh"
 
 class G4HCofThisEvent;
 class G4Event;
@@ -44,8 +45,13 @@ private:
   G4String ToName2(G4StepStatus stepStatus);
 
     // Addons for AmBeTagger
-  WCSimEventAction* EventAction_; 
-  const WCSimDetectorConstruction* DetectorConstruction_; 
+  WCSimEventAction* EventAction_;
+  const WCSimDetectorConstruction* DetectorConstruction_;
+  AmBeTagger::PmtResponse TaggerPmtResponse_;
+
+  // Optical photons at the tagger PMT: counts those transmitted into the
+  // photocathode plane and kills them. Returns true if the track was killed.
+  G4bool TaggerPmtReadout(const G4Step* aStep);
 };
 
 

@@ -9,8 +9,10 @@ namespace AmBeTagger
 class SinglePhotoelectronGain final
 {
  public:
-  explicit SinglePhotoelectronGain(G4double mean = 0.005,
-                                   G4double sigma = 0.0006);
+  // Single-PE peak height in volts (see AmBeTaggerWaveformBuilder.hh).
+  // Sample() draws a Gaussian, redrawing non-positive values.
+  explicit SinglePhotoelectronGain(G4double mean = 0.0058,
+                                   G4double sigma = 0.0023);
 
   G4double Sample() const;
   G4double Mean() const;

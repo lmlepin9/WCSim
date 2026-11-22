@@ -5,6 +5,8 @@
 #include "globals.hh"
 #include "G4String.hh"
 
+#include <vector>
+
 #include "TFile.h"
 #include "TTree.h"
 #include "WCSimRootEvent.hh"
@@ -44,6 +46,16 @@ public:
     bgo_ncher_created = nCher;
     bgo_nphot_tracked = nTracked;
   }
+  // AmBe tagger PMT: photoelectron count and waveform (amplitudes in mV,
+  // times in ns of Geant4 global time, integral in mV*ns)
+  void SetTaggerWaveformData(int nPE, double peakmV, double peakTimeNs, double integralmVns,
+                             const std::vector<double>& waveformmV){
+    tagger_npe = nPE;
+    tagger_wf_peak = peakmV;
+    tagger_wf_peak_time = peakTimeNs;
+    tagger_wf_integral = integralmVns;
+    tagger_wf = waveformmV;
+  }
   // Must be called exactly once per event: wcsimT is filled branch by branch.
   void FillBGOBranches(){
     if(bgoedepbranch) bgoedepbranch->Fill();
@@ -51,6 +63,11 @@ public:
     if(bgonscintbranch) bgonscintbranch->Fill();
     if(bgoncherbranch) bgoncherbranch->Fill();
     if(bgonphottrackedbranch) bgonphottrackedbranch->Fill();
+    if(taggernpebranch) taggernpebranch->Fill();
+    if(taggerwfpeakbranch) taggerwfpeakbranch->Fill();
+    if(taggerwfpeaktimebranch) taggerwfpeaktimebranch->Fill();
+    if(taggerwfintegralbranch) taggerwfintegralbranch->Fill();
+    if(taggerwfbranch) taggerwfbranch->Fill();
   }
   TTree* GetGeoTree(){return geoTree;}
   TTree* GetOptionsTree(){return optionsTree;}
@@ -116,6 +133,20 @@ private:
   TBranch* bgonscintbranch;
   TBranch* bgoncherbranch;
   TBranch* bgonphottrackedbranch;
+  // AmBe tagger PMT readout. Waveform: 1500 samples, 2 ns apart; sample k is
+  // at global time -700 ns + 2k ns. Empty (and the scalars 0) for events
+  // without photoelectrons.
+  int tagger_npe;              // photoelectrons from BGO-born photons
+  double tagger_wf_peak;       // waveform maximum [mV]
+  double tagger_wf_peak_time;  // global time of the maximum sample [ns]
+  double tagger_wf_integral;   // integral over the whole window [mV*ns]
+  std::vector<double> tagger_wf;      // waveform samples [mV]
+  std::vector<double>* tagger_wf_ptr; // ROOT branch address for tagger_wf
+  TBranch* taggernpebranch;
+  TBranch* taggerwfpeakbranch;
+  TBranch* taggerwfpeaktimebranch;
+  TBranch* taggerwfintegralbranch;
+  TBranch* taggerwfbranch;
 
   int numberOfEventsGenerated;
   int numberOfTimesWaterTubeHit;

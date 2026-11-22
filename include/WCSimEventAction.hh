@@ -5,6 +5,7 @@
 #include "G4UserEventAction.hh"
 #include "G4ThreeVector.hh"
 #include "G4Types.hh"
+#include <vector>
 #include "G4ios.hh"
 
 #include "WCSimDetectorConstruction.hh"
@@ -13,6 +14,11 @@
 #include "WCSimWCDigi.hh"
 #include "WCSimWCTrigger.hh"
 #include "WCSimWCDAQMessenger.hh"
+
+// For AmBeTagger
+
+#include "AmBeTaggerWaveformBuilder.hh"
+#include "AmBeTaggerWaveformObservables.hh"
 
 // added for LAPPD output
 #include "TTree.h"
@@ -28,6 +34,8 @@ private:
   WCSimPrimaryGeneratorAction* generatorAction;
   WCSimDetectorConstruction*   detectorConstructor;
   WCSimWCDAQMessenger* DAQMessenger;
+  AmBeTagger::WaveformBuilder     TaggerWaveformBuilder;   // default gain/noise
+  AmBeTagger::WaveformObservables TaggerWaveformAnalyzer;
   
 public:
   WCSimEventAction(WCSimRunAction*, WCSimDetectorConstruction*,
@@ -63,6 +71,15 @@ public:
   void AddBGOScintPhoton(){ BGOnScint++; }
   void AddBGOCherPhoton(){ BGOnCher++; }
   void AddBGOTrackedPhoton(){ BGOnTracked++; }
+  // AmBeTagger PMT readout: photons transmitted into the photocathode plane
+  // (BGO-born or born elsewhere), and photoelectron times of BGO-born ones
+  void AddTaggerPmtPhoton(G4bool bornInBGO){ if(bornInBGO) TaggerNPmt++; else TaggerNPmtForeign++; }
+  void AddTaggerPhotoelectron(G4double time){ TaggerPETimes.push_back(time); }
+  // Diagnostics: transmissions from the window into the vacuum ring outside
+  // the photocathode, and into the envelope wall glass
+  void AddTaggerVacuumEntry(){ TaggerNVacuumEntries++; }
+  void AddTaggerWallEntry(){ TaggerNWallEntries++; }
+  const std::vector<G4double>& GetTaggerPETimes() const { return TaggerPETimes; }
 
 private:
 
@@ -86,6 +103,12 @@ private:
   G4int BGOnScint;
   G4int BGOnCher;
   G4int BGOnTracked;
+  // AmBeTagger PMT readout counters
+  G4int TaggerNPmt;
+  G4int TaggerNPmtForeign;
+  G4int TaggerNVacuumEntries;
+  G4int TaggerNWallEntries;
+  std::vector<G4double> TaggerPETimes;
 
   // Additions for truth hit readout of LAPPDs
   //==========================================

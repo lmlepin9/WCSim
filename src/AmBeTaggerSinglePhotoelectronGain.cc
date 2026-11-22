@@ -17,7 +17,13 @@ G4double SinglePhotoelectronGain::Sample() const
     return mean_;
   }
 
-  return G4RandGauss::shoot(mean_, sigma_);
+  // A PMT never gives a non-positive single-PE charge: redraw those
+  // (about 0.6% of samples at sigma/mean = 0.4).
+  G4double gain = 0.0;
+  do {
+    gain = G4RandGauss::shoot(mean_, sigma_);
+  } while (gain <= 0.0);
+  return gain;
 }
 
 G4double SinglePhotoelectronGain::Mean() const

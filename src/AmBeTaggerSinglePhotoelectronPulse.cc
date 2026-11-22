@@ -10,7 +10,18 @@ namespace
 {
 const G4double kTauRise = 1.5 * ns;
 const G4double kTauFall = 5.0 * ns;
-const G4double kTransitTime = 23.0 * ns;
+const G4double kTransitTime = 26.0 * ns; // Now following PMT datasheet
+
+G4double UnnormalisedShape(G4double pulseTime)
+{
+  return (1.0 - std::exp(-pulseTime / kTauRise))
+      * std::exp(-pulseTime / kTauFall);
+}
+
+// The shape peaks at t* = tauRise * ln(1 + tauFall/tauRise); dividing by its
+// value there makes the pulse peak 1, so the gain is the single-PE peak height.
+const G4double kPeakNormalisation =
+    1.0 / UnnormalisedShape(kTauRise * std::log(1.0 + kTauFall / kTauRise));
 }
 
 G4double SinglePhotoelectronPulse::Amplitude(G4double timeAfterPe) const
@@ -20,7 +31,6 @@ G4double SinglePhotoelectronPulse::Amplitude(G4double timeAfterPe) const
     return 0.0;
   }
 
-  return (1.0 - std::exp(-pulseTime / kTauRise))
-      * std::exp(-pulseTime / kTauFall);
+  return kPeakNormalisation * UnnormalisedShape(pulseTime);
 }
 }  // namespace AmBeTagger
