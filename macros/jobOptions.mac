@@ -21,5 +21,6 @@
 #/WCSim/AmBe/IncludeAmBeTagger true
 #/WCSim/AmBe/TaggerPosition 0 0 0 cm
 #/WCSim/AmBe/ReferencePmt false   # test: BGOg4Sim reference PMT instead of the R1398-04 front end
+#/WCSim/AmBe/ReferenceWaveform false   # test: BGOg4Sim waveform model (5 mV unit-area PE, per-sample gain smearing, trigger alignment)
 #/WCSim/AmBe/TaggerRotation 0 0 0 deg
 #/WCSim/AmBe/BypassQEForPrimaryPhotons true

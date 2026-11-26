@@ -129,6 +129,12 @@ WCSimDetectorMessenger::WCSimDetectorMessenger(WCSimDetectorConstruction* WCSimD
   taggerReferencePmt->SetDefaultValue(false);
   taggerReferencePmt->AvailableForStates(G4State_PreInit, G4State_Idle);
 
+  taggerReferenceWaveform = new G4UIcmdWithABool("/WCSim/AmBe/ReferenceWaveform",this);
+  taggerReferenceWaveform->SetGuidance("true or false | Test: build the tagger PMT waveform as BGOg4Sim's photon_histogram_builder.py does: unit-area single-PE pulse with 5 mV area per PE, PE times binned in 2 ns samples with per-sample gain smearing Normal(N*5 mV, sqrt(N)*0.6 mV), and the first 10 mV crossing shifted to 700 ns. Default: false (R1398-04 model: 5.8 mV peak, 40% per-PE gain spread, global time axis)");
+  taggerReferenceWaveform->SetParameterName("ReferenceWaveform",true);
+  taggerReferenceWaveform->SetDefaultValue(false);
+  taggerReferenceWaveform->AvailableForStates(G4State_PreInit, G4State_Idle);
+
   //-----------------------------------------------------------------
   PMTQEMethod = new G4UIcmdWithAString("/WCSim/PMTQEMethod", this);
   PMTQEMethod->SetGuidance("Set the PMT configuration.");
@@ -243,6 +249,7 @@ WCSimDetectorMessenger::~WCSimDetectorMessenger()
   delete taggerRotation;
   delete bypassQEForPrimaryPhotons;
   delete taggerReferencePmt;
+  delete taggerReferenceWaveform;
   delete AmBeDir;
   delete distortionCmd;
   delete WCSimDir;
@@ -335,6 +342,11 @@ void WCSimDetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 	if (command == taggerReferencePmt){
 		G4cout << "AmBe tagger reference (BGOg4Sim) PMT model: " << newValue << G4endl;
 		WCSimDetector->SetTaggerReferencePmt(taggerReferencePmt->GetNewBoolValue(newValue));
+	}
+
+	if (command == taggerReferenceWaveform){
+		G4cout << "AmBe tagger reference (BGOg4Sim) waveform model: " << newValue << G4endl;
+		WCSimDetector->SetTaggerReferenceWaveform(taggerReferenceWaveform->GetNewBoolValue(newValue));
 	}
 
 	if (command == SaveCapture){

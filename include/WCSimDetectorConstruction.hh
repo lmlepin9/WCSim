@@ -243,6 +243,10 @@ public:
   void SetTaggerReferencePmt(G4bool choice){TaggerReferencePmt = choice;}
   G4bool GetTaggerReferencePmt() const {return TaggerReferencePmt;}
 
+  // Test: BGOg4Sim waveform model (photon_histogram_builder.py) for the tagger
+  void SetTaggerReferenceWaveform(G4bool choice){TaggerReferenceWaveform = choice;}
+  G4bool GetTaggerReferenceWaveform() const {return TaggerReferenceWaveform;}
+
   void SetTaggerPosition(G4ThreeVector pos){taggerPosition = pos;}
   G4ThreeVector GetTaggerPosition(){return taggerPosition;}
 
@@ -299,6 +303,7 @@ private:
   G4bool IncludeAmBeTagger; 
   G4bool BypassQEForPrimaryPhotons;
   G4bool TaggerReferencePmt;
+  G4bool TaggerReferenceWaveform;
   G4RotationMatrix taggerRotation;
   G4ThreeVector taggerPosition; 
 

@@ -24,6 +24,16 @@ const G4double kPeakNormalisation =
     1.0 / UnnormalisedShape(kTauRise * std::log(1.0 + kTauFall / kTauRise));
 }
 
+G4double SinglePhotoelectronPulse::Shape(G4double pulseTime)
+{
+  return pulseTime < 0.0 ? 0.0 : UnnormalisedShape(pulseTime);
+}
+
+G4double SinglePhotoelectronPulse::TransitTime() const
+{
+  return kTransitTime;
+}
+
 G4double SinglePhotoelectronPulse::Amplitude(G4double timeAfterPe) const
 {
   const G4double pulseTime = timeAfterPe - kTransitTime;

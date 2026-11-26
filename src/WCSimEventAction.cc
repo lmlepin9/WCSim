@@ -1132,12 +1132,15 @@ void WCSimEventAction::EndOfEventAction(const G4Event* evt)
     std::vector<double> waveformmV;
     G4double peakmV = 0., peakTimeNs = 0., integralmVns = 0.;
     if(!TaggerPETimes.empty()){
+      TaggerWaveformBuilder.SetReferenceMode(detectorConstructor->GetTaggerReferenceWaveform());
       waveformmV = TaggerWaveformBuilder.Build(TaggerPETimes);
       const AmBeTagger::WaveformSummary wf =
           TaggerWaveformAnalyzer.Analyze(waveformmV, TaggerWaveformBuilder.SampleSpacing());
       for(size_t i = 0; i < waveformmV.size(); ++i) waveformmV[i] *= 1000.;
       peakmV = wf.peakAmplitude * 1000.;
-      // Analyze() measures peakTime from the start of the window (-700 ns)
+      // Analyze() measures peakTime from the start of the window (-700 ns).
+      // With /WCSim/AmBe/ReferenceWaveform a triggered waveform is
+      // trigger-aligned (first 10 mV crossing at 0), so this is not global time.
       peakTimeNs = (TaggerWaveformBuilder.StartTime() + wf.peakTime) / ns;
       integralmVns = wf.integral * 1000. / ns;
     }
