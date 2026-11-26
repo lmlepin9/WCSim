@@ -20,5 +20,6 @@
 
 #/WCSim/AmBe/IncludeAmBeTagger true
 #/WCSim/AmBe/TaggerPosition 0 0 0 cm
+#/WCSim/AmBe/ReferencePmt false   # test: BGOg4Sim reference PMT instead of the R1398-04 front end
 #/WCSim/AmBe/TaggerRotation 0 0 0 deg
 #/WCSim/AmBe/BypassQEForPrimaryPhotons true

@@ -1,0 +1,63 @@
+# 4.44 MeV gammas from the source volume of the BGOg4Sim reference model
+# (Filtro_PrimaryGeneratorAction), for a like-for-like comparison of the BGO
+# light-collection spread with that model.
+#
+# Run from the build directory:
+#   tools/annie-run.sh 'cd $WCSIM_BUILD && WCSim macros/ambe_tagger_gamma44_refsource.mac' 2>&1 | tee refsource.log
+# Select full-energy events at 4.44 MeV (e.g. gammaEnergy = 4.44 in
+# plot_tagger_waveform.C).
+#
+# The tagger must be enabled in $WCSIM_BUILD/macros/jobOptions.mac, with the
+# placement the coordinates below assume:
+#   /WCSim/AmBe/IncludeAmBeTagger true
+#   /WCSim/AmBe/TaggerPosition 0 0 0 cm
+#   /WCSim/AmBe/TaggerRotation 0 0 0 deg
+# Add /WCSim/AmBe/ReferencePmt true there for the reference PMT model.
+#
+# Reference source, in its crystal frame (BGO centre at 0, axis z, PMT at +z):
+#   4.44 MeV gamma, isotropic, start point uniform in a cylinder of radius
+#   3.9 mm and height 10 mm, axis along z, centred at (0, +2 mm, -40 mm).
+# Here the tagger axis is the global +y axis and the BGO centre is at
+# (0, -144.65, 1681) mm, so the cylinder centre is (2, -184.65, 1681) mm (the
+# 2 mm offset, perpendicular to the axis, is put along global x).
+# rot1/rot2 turn the gps cylinder axis (z' = rot1 x rot2) onto global +y.
+#
+# Difference from the reference: there the source sits in vacuum; here the
+# volume overlaps the steel capsule and the 11.63 mm steel shield, which the
+# gammas cross before reaching the BGO (about a quarter interact there).
+
+/run/verbose 1
+/tracking/verbose 0
+/hits/verbose 0
+/process/verbose 0
+/vis/disable
+
+/WCSim/PMTQEMethod   Multi_Tank_Types
+/WCSim/LAPPDQEMethod Multi_Tank_Types
+/WCSim/PMTCollEff on
+/control/execute macros/annie_daq.mac
+
+# No tank dark noise: any tank hit then comes from the gamma itself.
+/DarkRate/SetDetectorElement tank
+/DarkRate/SetDarkRate 0 kHz
+
+/control/execute macros/setRandomParameters.mac
+
+/mygen/generator gps
+/gps/particle gamma
+/gps/ene/type Mono
+/gps/energy 4.44 MeV
+/gps/ang/type iso
+
+/gps/pos/type Volume
+/gps/pos/shape Cylinder
+/gps/pos/radius 3.9 mm
+/gps/pos/halfz 5 mm
+/gps/pos/rot1 1 0 0
+/gps/pos/rot2 0 0 -1
+/gps/pos/centre 2 -184.65 1681 mm
+
+/WCSimIO/RootFile ambe_gamma44_refsource
+# About 2.5% of events are full-energy (4.44 MeV in the BGO): 20000 events
+# give ~500, enough for the FE resolution to ~0.015.
+/run/beamOn 20000

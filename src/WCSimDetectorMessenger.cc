@@ -123,6 +123,12 @@ WCSimDetectorMessenger::WCSimDetectorMessenger(WCSimDetectorConstruction* WCSimD
   bypassQEForPrimaryPhotons->SetDefaultValue(false);
   bypassQEForPrimaryPhotons->AvailableForStates(G4State_PreInit, G4State_Idle);
 
+  taggerReferencePmt = new G4UIcmdWithABool("/WCSim/AmBe/ReferencePmt",this);
+  taggerReferencePmt->SetGuidance("true or false | Test: replace the tagger PMT front end (coupling, window, envelope, photocathode plane) by the BGOg4Sim reference PMT, a r = 12.25 mm cylinder in contact with the BGO front face that counts photons on entry. This option has to be set in: jobOptions.mac. Default: false");
+  taggerReferencePmt->SetParameterName("ReferencePmt",true);
+  taggerReferencePmt->SetDefaultValue(false);
+  taggerReferencePmt->AvailableForStates(G4State_PreInit, G4State_Idle);
+
   //-----------------------------------------------------------------
   PMTQEMethod = new G4UIcmdWithAString("/WCSim/PMTQEMethod", this);
   PMTQEMethod->SetGuidance("Set the PMT configuration.");
@@ -236,6 +242,7 @@ WCSimDetectorMessenger::~WCSimDetectorMessenger()
   delete taggerPosition;
   delete taggerRotation;
   delete bypassQEForPrimaryPhotons;
+  delete taggerReferencePmt;
   delete AmBeDir;
   delete distortionCmd;
   delete WCSimDir;
@@ -323,6 +330,11 @@ void WCSimDetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 	if (command == bypassQEForPrimaryPhotons){
 		G4cout << "Bypass stacking QE for primary optical photons: " << newValue << G4endl;
 		WCSimDetector->SetBypassQEForPrimaryPhotons(bypassQEForPrimaryPhotons->GetNewBoolValue(newValue));
+	}
+
+	if (command == taggerReferencePmt){
+		G4cout << "AmBe tagger reference (BGOg4Sim) PMT model: " << newValue << G4endl;
+		WCSimDetector->SetTaggerReferencePmt(taggerReferencePmt->GetNewBoolValue(newValue));
 	}
 
 	if (command == SaveCapture){

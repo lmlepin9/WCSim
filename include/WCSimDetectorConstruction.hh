@@ -239,6 +239,10 @@ public:
   void SetBypassQEForPrimaryPhotons(G4bool choice){BypassQEForPrimaryPhotons = choice;}
   G4bool GetBypassQEForPrimaryPhotons() const {return BypassQEForPrimaryPhotons;}
 
+  // Test: BGOg4Sim reference PMT model instead of the R1398-04 front end
+  void SetTaggerReferencePmt(G4bool choice){TaggerReferencePmt = choice;}
+  G4bool GetTaggerReferencePmt() const {return TaggerReferencePmt;}
+
   void SetTaggerPosition(G4ThreeVector pos){taggerPosition = pos;}
   G4ThreeVector GetTaggerPosition(){return taggerPosition;}
 
@@ -294,6 +298,7 @@ private:
   // AmBeTagger Options
   G4bool IncludeAmBeTagger; 
   G4bool BypassQEForPrimaryPhotons;
+  G4bool TaggerReferencePmt;
   G4RotationMatrix taggerRotation;
   G4ThreeVector taggerPosition; 
 

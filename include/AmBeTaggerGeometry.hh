@@ -19,6 +19,12 @@ public:
                          const G4ThreeVector& pos = G4ThreeVector(),
                          const G4RotationMatrix& rot = G4RotationMatrix());
 
+  // Test option, set before Build(): replace the PMT front end (coupling,
+  // window, envelope, vacuum, photocathode plane) by the BGOg4Sim reference
+  // PMT, a cylinder that counts photons on entry. The window, envelope and
+  // vacuum volumes are then null.
+  void SetReferencePmt(bool choice) { referencePmt_ = choice; }
+
   // Valid after Build(); needed later for the sensitive detectors.
   G4LogicalVolume* GetScoringVolume() const { return scoringVolume_; }
   G4LogicalVolume* GetPmtPlaneVolume() const { return pmtPlaneVolume_; }
@@ -28,6 +34,7 @@ public:
   G4LogicalVolume* GetPmtVacuumVolume() const { return pmtVacuumVolume_; }
 
 private:
+  bool referencePmt_ = false;
   G4LogicalVolume* scoringVolume_ = nullptr;
   G4LogicalVolume* pmtPlaneVolume_ = nullptr;
   G4LogicalVolume* pmtWindowVolume_ = nullptr;

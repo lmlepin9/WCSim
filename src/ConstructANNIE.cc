@@ -262,6 +262,7 @@ G4LogicalVolume* WCSimDetectorConstruction::ConstructANNIE()
         << taggerPosition.z() << " [mm]" << G4endl;
 
         G4cout << "--------------------------------------------" << G4endl;
+        AmBeTagger.SetReferencePmt(TaggerReferencePmt);
         AmBeTagger.Build(water_log,
           taggerPosition,
           taggerRotation);
