@@ -1,0 +1,96 @@
+# 4.4 MeV gamma tests of the AmBe tagger BGO (12C* de-excitation line).
+#
+# Run from the build directory:
+#   tools/annie-run.sh 'cd $WCSIM_BUILD && WCSim $WCSIM_SOURCE/macros/ambe_tagger_gamma44.mac' 2>&1 | tee gamma44.log
+#
+# The tagger must be enabled in $WCSIM_BUILD/macros/jobOptions.mac, with the
+# placement the coordinates below assume:
+#   /WCSim/AmBe/IncludeAmBeTagger true
+#   /WCSim/AmBe/TaggerPosition 0 0 0 cm
+#   /WCSim/AmBe/TaggerRotation 0 0 0 deg
+#
+# Coordinates (GLOBAL frame, mm). With that placement the tagger z axis is the
+# global +y axis (PMT up, source down) and the BGO centre is at the tank centre:
+#   BGO centre           (0, -144.65, 1681)
+#   BGO                  annulus r = 1..25 mm around the axis, y = -169.65..-119.65
+#   axial bore (air)     r < 1 mm, closed below by the 0.25 mm Teflon back cap
+#   AmBe capsule centre  (0, -186.53, 1681)  (under 11.63 mm of steel shield)
+# r below is the distance from the tagger axis, in the x-z plane.
+#
+# Every run writes its own ROOT file (WCSim adds _<run number>).
+# Each BGO event produces ~4.4e4 scintillation photons (10000/MeV), so keep
+# the event counts modest until the speed is known.
+
+/run/verbose 1
+/tracking/verbose 0
+/hits/verbose 0
+/process/verbose 0
+/vis/disable
+
+/WCSim/PMTQEMethod   Multi_Tank_Types
+/WCSim/LAPPDQEMethod Multi_Tank_Types
+/WCSim/PMTCollEff on
+/control/execute macros/annie_daq.mac
+
+# No tank dark noise: any tank hit then comes from the gamma itself
+# (Cherenkov light of Compton electrons in the water).
+/DarkRate/SetDetectorElement tank
+/DarkRate/SetDarkRate 0 kHz
+
+/control/execute macros/setRandomParameters.mac
+
+#--------------------------------------------------------------------------
+# Runs A and B: pencil beams parallel to the axis, from the bottom of the BGO
+# upwards (+y). Start point inside the cavity air, 0.1 mm above the back cap.
+# A (in the bore, r = 0): 50 mm of air, so almost no BGO interactions. The
+#   gamma leaves through the coupling and the PMT.
+# B (r = 10 mm): the same path through 50 mm of BGO (about 1 attenuation length).
+# The difference between A and B checks that the bore exists.
+#--------------------------------------------------------------------------
+/mygen/generator gun
+/gun/particle gamma
+/gun/energy 4.4 MeV
+/gun/direction 0 1 0
+
+/WCSimIO/RootFile ambe_gamma44_axis_bore
+/gun/position 0 -169.55 1681 mm
+/run/beamOn 200
+
+/WCSimIO/RootFile ambe_gamma44_axis_r10
+/gun/position 10 -169.55 1681 mm
+/run/beamOn 200
+
+#--------------------------------------------------------------------------
+# Run C: radial pencil beam (+x) at BGO mid-height, from the water outside
+# the housing (outer radius 35.2 mm). It crosses PVC, air, the wrap and the
+# whole BGO diameter (through the bore).
+#--------------------------------------------------------------------------
+/WCSimIO/RootFile ambe_gamma44_radial
+/gun/position -60 -144.65 1681 mm
+/gun/direction 1 0 0
+/run/beamOn 200
+
+#--------------------------------------------------------------------------
+# Run D: isotropic point source at the BGO centre, inside the bore.
+# This is the best case for containment: full-energy, single-escape (3.89 MeV)
+# and double-escape (3.38 MeV) peaks.
+#--------------------------------------------------------------------------
+/mygen/generator gps
+/gps/particle gamma
+/gps/ene/type Mono
+/gps/energy 4.4 MeV
+/gps/pos/type Point
+/gps/ang/type iso
+
+/WCSimIO/RootFile ambe_gamma44_iso_centre
+/gps/pos/centre 0 -144.65 1681 mm
+/run/beamOn 500
+
+#--------------------------------------------------------------------------
+# Run E: isotropic point source at the AmBe capsule centre.
+# This is the real source geometry: about half the gammas head towards the BGO,
+# through the steel shield.
+#--------------------------------------------------------------------------
+/WCSimIO/RootFile ambe_gamma44_iso_source
+/gps/pos/centre 0 -186.53 1681 mm
+/run/beamOn 500
