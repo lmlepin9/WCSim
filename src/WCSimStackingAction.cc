@@ -40,6 +40,22 @@ G4ClassificationOfNewTrack WCSimStackingAction::ClassifyNewTrack
       // XQ: get the maximum QE and multiply it by the ratio
       // only work for the range between 240 nm and 660 nm for now 
       // Even with WLS
+
+      // Debug: primary photons (no creator process) skip QE culling if requested
+      // via /WCSim/AmBe/BypassQEForPrimaryPhotons true
+      if(aTrack->GetCreatorProcess()==nullptr && DetConstruct->GetBypassQEForPrimaryPhotons()){
+        return classification;
+      }
+
+      // Optical photons born in the AmBe tagger BGO: the tank PMT QE does not
+      // apply. They are all tracked; the tagger PMT applies its own QE.
+      G4VPhysicalVolume* volume = aTrack->GetVolume();
+      G4LogicalVolume* bgoVol = DetConstruct->GetBGOScoringVol();
+      if(volume && bgoVol && volume->GetLogicalVolume() == bgoVol){
+        return classification;
+      }
+
+
       G4float photonWavelength = (2.0*M_PI*197.3)/(aTrack->GetTotalEnergy()/CLHEP::eV);
       //G4float ratio = 1.; //1./(1.0-0.25); ??? increase the reported QE? Why???
       G4float ratio=1.;

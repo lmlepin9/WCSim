@@ -87,6 +87,7 @@ WCSimDetectorConstruction::WCSimDetectorConstruction(G4int DetConfig,WCSimTuning
 
   // Set whether or not to include AmBeTagger
   SetIncludeAmBeTagger(false);
+  SetBypassQEForPrimaryPhotons(false);
 
   //----------------------------------------------------- 
   // Set whether or not Pi0-specific info is saved

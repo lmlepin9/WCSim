@@ -21,3 +21,4 @@
 #/WCSim/AmBe/IncludeAmBeTagger true
 #/WCSim/AmBe/TaggerPosition 0 0 0 cm
 #/WCSim/AmBe/TaggerRotation 0 0 0 deg
+#/WCSim/AmBe/BypassQEForPrimaryPhotons true
