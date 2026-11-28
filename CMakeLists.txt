@@ -193,16 +193,14 @@ target_link_libraries(WCSim ${Geant4_LIBRARIES} ${ROOT_LIBRARIES} ${Genie_LIBRAR
 # build WCSim. This is so that we can run the executable directly because it
 # relies on these scripts being in the current working directory.
 #
+file(GLOB WCSIM_MACROS CONFIGURE_DEPENDS
+  RELATIVE ${PROJECT_SOURCE_DIR}
+  ${PROJECT_SOURCE_DIR}/macros/*.mac
+  )
+
 set(WCSIM_SCRIPTS
-  macros/jobOptions.mac
+  ${WCSIM_MACROS}
   WCSim.mac
-  macros/daq.mac
-  macros/annie_daq.mac
-  macros/visOGLSX.mac
-  macros/visRayTracer.mac
-  macros/tuning_parameters.mac
-  macros/primaries_directory.mac
-  macros/setRandomParameters.mac
   pulsecharacteristics.root
   PHASE2_INNER_STRUCTURE.gdml
   geniedirectory.txt
