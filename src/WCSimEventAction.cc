@@ -12,6 +12,10 @@
 #include "WCSimDetectorConstruction.hh"
 #include "WCSimEventInformation.hh"
 
+
+// For waveform generation 
+#include "AmBeTaggerWaveformBuilder.hh"
+
 #include "G4Event.hh"
 #include "G4RunManager.hh"
 #include "G4EventManager.hh"
@@ -84,7 +88,8 @@ WCSimEventAction::WCSimEventAction(WCSimRunAction* myRun,
   :runAction(myRun), generatorAction(myGenerator), 
    detectorConstructor(myDetector),
    ConstructedDAQClasses(false), LAPPDfile(0), SavedOptions(false), BGOedep(0.), BGOevis(0.),
-   BGOnScint(0), BGOnCher(0), BGOnTracked(0)
+   BGOnScint(0), BGOnCher(0), BGOnTracked(0),
+   TaggerNPmt(0)
 {
   DAQMessenger = new WCSimWCDAQMessenger(this);
   DAQMessenger->AddDAQMessengerInstance("tank");
@@ -329,6 +334,8 @@ void WCSimEventAction::BeginOfEventAction(const G4Event* evt)
   BGOnScint=0;
   BGOnCher=0;
   BGOnTracked=0;
+  TaggerNPmt=0;
+  TaggerPETimes.clear();
 }
 
 void WCSimEventAction::EndOfEventAction(const G4Event* evt)
@@ -343,6 +350,14 @@ void WCSimEventAction::EndOfEventAction(const G4Event* evt)
   if(BGOnScint + BGOnCher > 0)
     G4cout << " (tracked/created " << G4double(BGOnTracked)/(BGOnScint + BGOnCher) << ")";
   G4cout << G4endl;
+  G4double firstPETime = 0.;
+  for(size_t i = 0; i < TaggerPETimes.size(); ++i){
+    if(i == 0 || TaggerPETimes[i] < firstPETime) firstPETime = TaggerPETimes[i];
+  }
+  G4cout<<"Tagger PMT: BGO-born photons into PMT " << TaggerNPmt
+        << ", photoelectrons " << TaggerPETimes.size()
+        << ", first PE " << firstPETime/ns << " ns" << G4endl;
+  // The tagger waveform is built and stored next to SetBGOEventData below.
 
   G4int         event_id = evt->GetEventID();
   // ----------------------------------------------------------------------
@@ -1109,6 +1124,27 @@ void WCSimEventAction::EndOfEventAction(const G4Event* evt)
   // branches, before the entry count is set and the tree written.
   // (No-op when the tagger is off: the branches do not exist.)
   GetRunAction()->SetBGOEventData(BGOedep/MeV, BGOevis/MeV, BGOnScint, BGOnCher, BGOnTracked);
+  if(detectorConstructor->GetIncludeAmBeTagger()){
+    // Tagger PMT waveform. The builder returns amplitudes in volts (as plain
+    // numbers) on a grid in Geant4 time units; store mV, ns and mV*ns.
+    // Events without photoelectrons store an empty waveform and zeros.
+    std::vector<double> waveformmV;
+    G4double peakmV = 0., peakTimeNs = 0., integralmVns = 0.;
+    if(!TaggerPETimes.empty()){
+      waveformmV = TaggerWaveformBuilder.Build(TaggerPETimes);
+      const AmBeTagger::WaveformSummary wf =
+          TaggerWaveformAnalyzer.Analyze(waveformmV, TaggerWaveformBuilder.SampleSpacing());
+      for(size_t i = 0; i < waveformmV.size(); ++i) waveformmV[i] *= 1000.;
+      peakmV = wf.peakAmplitude * 1000.;
+      // Analyze() measures peakTime from the start of the window (-700 ns).
+      // A triggered waveform is trigger-aligned (first 10 mV crossing at 0),
+      // so this is global time only for untriggered waveforms.
+      peakTimeNs = (TaggerWaveformBuilder.StartTime() + wf.peakTime) / ns;
+      integralmVns = wf.integral * 1000. / ns;
+    }
+    GetRunAction()->SetTaggerWaveformData(TaggerPETimes.size(), peakmV, peakTimeNs,
+                                          integralmVns, waveformmV);
+  }
   GetRunAction()->FillBGOBranches();
 
   TTree* tree = GetRunAction()->GetTree();

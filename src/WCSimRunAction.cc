@@ -47,6 +47,16 @@ WCSimRunAction::WCSimRunAction(WCSimDetectorConstruction* test, WCSimRandomParam
   bgonscintbranch=0;
   bgoncherbranch=0;
   bgonphottrackedbranch=0;
+  tagger_npe=0;
+  tagger_wf_peak=0.;
+  tagger_wf_peak_time=0.;
+  tagger_wf_integral=0.;
+  tagger_wf_ptr=&tagger_wf;
+  taggernpebranch=0;
+  taggerwfpeakbranch=0;
+  taggerwfpeaktimebranch=0;
+  taggerwfintegralbranch=0;
+  taggerwfbranch=0;
 
   wcsimrootoptions = new WCSimRootOptions();
   wcsimrootoptions->PopulateFileVersion();   // read from files and/or git the WCSimVersion and git commit hash
@@ -120,7 +130,17 @@ void WCSimRunAction::CreateNewOutputFile(){
     bgonscintbranch = 0;
     bgoncherbranch = 0;
     bgonphottrackedbranch = 0;
+    taggernpebranch = 0;
+    taggerwfpeakbranch = 0;
+    taggerwfpeaktimebranch = 0;
+    taggerwfintegralbranch = 0;
+    taggerwfbranch = 0;
     if(wcsimdetector->GetIncludeAmBeTagger()){
+      taggernpebranch = WCSimTree->Branch("tagger_npe", &tagger_npe, "tagger_npe/I");
+      taggerwfpeakbranch = WCSimTree->Branch("tagger_wf_peak", &tagger_wf_peak, "tagger_wf_peak/D");
+      taggerwfpeaktimebranch = WCSimTree->Branch("tagger_wf_peak_time", &tagger_wf_peak_time, "tagger_wf_peak_time/D");
+      taggerwfintegralbranch = WCSimTree->Branch("tagger_wf_integral", &tagger_wf_integral, "tagger_wf_integral/D");
+      taggerwfbranch = WCSimTree->Branch("tagger_wf", "std::vector<double>", &tagger_wf_ptr);
       bgoedepbranch = WCSimTree->Branch("bgo_edep", &bgo_edep, "bgo_edep/D");
       bgoevisbranch = WCSimTree->Branch("bgo_evis", &bgo_evis, "bgo_evis/D");
       bgonscintbranch = WCSimTree->Branch("bgo_nscint_created", &bgo_nscint_created, "bgo_nscint_created/I");

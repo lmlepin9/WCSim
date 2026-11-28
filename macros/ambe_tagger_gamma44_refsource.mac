@@ -1,0 +1,91 @@
+# 4.44 MeV gammas from the source volume of the BGOg4Sim reference model
+# (Filtro_PrimaryGeneratorAction), for a like-for-like comparison of the BGO
+# light-collection spread with that model.
+#
+# Run from the build directory:
+#   tools/annie-run.sh 'cd $WCSIM_BUILD && WCSim macros/ambe_tagger_gamma44_refsource.mac' 2>&1 | tee refsource.log
+# Select full-energy events at 4.44 MeV (e.g. gammaEnergy = 4.44 in
+# plot_tagger_waveform.C).
+#
+# The tagger must be enabled in $WCSIM_BUILD/macros/jobOptions.mac, with the
+# placement the coordinates below assume:
+#   /WCSim/AmBe/IncludeAmBeTagger true
+#   /WCSim/AmBe/TaggerPosition 0 0 0 cm
+#   /WCSim/AmBe/TaggerRotation 0 0 0 deg
+#
+# Reference source, in its crystal frame (BGO centre at 0, axis z, PMT at +z):
+#   4.44 MeV gamma, isotropic (here: restricted to a cone, see below), start
+#   point uniform in a cylinder of radius
+#   3.9 mm and height 10 mm, axis along z, centred at (0, +2 mm, -40 mm).
+# Here the tagger axis is the global +y axis and the BGO centre is at
+# (0, -144.65, 1681) mm, so the cylinder centre is (2, -184.65, 1681) mm (the
+# 2 mm offset, perpendicular to the axis, is put along global x).
+# rot1/rot2 turn the gps cylinder axis (z' = rot1 x rot2) onto global +y.
+#
+# Difference from the reference: there the source sits in vacuum; here the
+# volume overlaps the steel capsule and the 11.63 mm steel shield, which the
+# gammas cross before reaching the BGO (about a quarter interact there).
+#
+# Direction biasing (differs from the reference, which is fully isotropic):
+# gammas are emitted only inside a cone around the tagger axis (+y) that
+# contains every line from any point of the source volume to any point of the
+# PMT surface (disk of radius 12.25 mm on the BGO front face, crystal z =
+# +25 mm). Worst case: source point 2 + 3.9 = 5.9 mm off axis at crystal z =
+# -35 mm, PMT edge on the opposite side, so
+#   maxtheta = atan((5.9 + 12.25) / (25 + 35)) = 16.8 deg  -> use 17 deg.
+# From the source centre the PMT disk alone subtends atan(12.25/65) = 10.7 deg.
+# The cone is 2.2% of 4pi, so each event is ~46x more likely to reach the BGO
+# than with the isotropic source. Gammas outside the cone that would scatter
+# into the BGO are lost, and the distribution of interaction points is pulled
+# toward the axis, so the FE fraction and possibly the light spread differ
+# from the isotropic run. Comment out mintheta/maxtheta to get it back.
+# GPS iso convention: theta = 0 is along -z' of the angular frame, with
+# z' = ang/rot1 x ang/rot2 = x x z = -y, so theta = 0 points along +y.
+
+/run/verbose 1
+/tracking/verbose 0
+/hits/verbose 0
+/process/verbose 0
+/vis/disable
+
+/WCSim/PMTQEMethod   Multi_Tank_Types
+/WCSim/LAPPDQEMethod Multi_Tank_Types
+/WCSim/PMTCollEff on
+/control/execute macros/annie_daq.mac
+
+# No tank dark noise: any tank hit then comes from the gamma itself.
+/DarkRate/SetDetectorElement tank
+/DarkRate/SetDarkRate 0 kHz
+
+# No MRD dark noise
+/DarkRate/SetDetectorElement mrd
+/DarkRate/SetDarkRate 0 kHz
+
+# No FACC dark noise
+/DarkRate/SetDetectorElement facc
+/DarkRate/SetDarkRate 0 kHz
+
+/control/execute macros/setRandomParameters.mac
+
+/mygen/generator gps
+/gps/particle gamma
+/gps/ene/type Mono
+/gps/energy 4.44 MeV
+/gps/ang/type iso
+/gps/ang/rot1 1 0 0
+/gps/ang/rot2 0 0 1
+/gps/ang/mintheta 0 deg
+/gps/ang/maxtheta 17 deg
+
+/gps/pos/type Volume
+/gps/pos/shape Cylinder
+/gps/pos/radius 3.9 mm
+/gps/pos/halfz 5 mm
+/gps/pos/rot1 1 0 0
+/gps/pos/rot2 0 0 -1
+/gps/pos/centre 2 -184.65 1681 mm
+
+/WCSimIO/RootFile ambe_gamma44_refsource
+# Isotropic: about 2.5% of events were full-energy (4.44 MeV in the BGO).
+# With the cone the FE fraction is much higher, so fewer events are needed.
+/run/beamOn 20000

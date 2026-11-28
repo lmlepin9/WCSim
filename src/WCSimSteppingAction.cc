@@ -21,7 +21,60 @@
 #include "G4LossTableManager.hh"
 #include "G4EmSaturation.hh"
 #include "G4OpticalPhoton.hh"
+#include "G4ProcessManager.hh"
 
+
+namespace
+{
+// Boundary process of optical photons, looked up once from the photon's own
+// process list (independent of which particle steps first).
+G4OpBoundaryProcess* TaggerOpBoundary()
+{
+  static G4ThreadLocal G4OpBoundaryProcess* opBoundary = nullptr;
+  if(!opBoundary){
+    G4ProcessManager* pm = G4OpticalPhoton::Definition()->GetProcessManager();
+    if(!pm) return nullptr;
+    G4ProcessVector* pv = pm->GetProcessList();
+    for(G4int i = 0; i < pv->size(); ++i){
+      if((*pv)[i]->GetProcessName() == "OpBoundary"){
+        opBoundary = static_cast<G4OpBoundaryProcess*>((*pv)[i]);
+        break;
+      }
+    }
+  }
+  return opBoundary;
+}
+}
+
+G4bool WCSimSteppingAction::TaggerPmtReadout(const G4Step* aStep)
+{
+  G4LogicalVolume* planeVol = DetectorConstruction_->GetTaggerPmtPlane();
+  if(!planeVol) return false;
+
+  // Only steps that end on a boundary where the photon was transmitted. A
+  // reflected photon also ends its step with the next volume as post-step
+  // volume, then steps back with zero length, so the volume alone is not
+  // enough.
+  const G4StepPoint* post = aStep->GetPostStepPoint();
+  if(post->GetStepStatus() != fGeomBoundary) return false;
+  G4OpBoundaryProcess* opBoundary = TaggerOpBoundary();
+  if(!opBoundary || opBoundary->GetStatus() != FresnelRefraction) return false;
+
+  G4VPhysicalVolume* postPV = post->GetTouchableHandle()->GetVolume();
+  if(!postPV || postPV->GetLogicalVolume() != planeVol) return false;
+  G4Track* track = aStep->GetTrack();
+
+  // PMT: count, apply the QE, kill. Photoelectrons only for photons born in
+  // the BGO; others (e.g. tank light) were already QE-culled by
+  // WCSimStackingAction and are only killed.
+  if(track->GetLogicalVolumeAtVertex() == DetectorConstruction_->GetBGOScoringVol()){
+    EventAction_->AddTaggerPmtPhoton();
+    if(TaggerPmtResponse_.ProducesPhotoelectron(track->GetKineticEnergy()))
+      EventAction_->AddTaggerPhotoelectron(track->GetGlobalTime());
+  }
+  track->SetTrackStatus(fStopAndKill);
+  return true;
+}
 
 
 void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
@@ -29,6 +82,13 @@ void WCSimSteppingAction::UserSteppingAction(const G4Step* aStep)
   //return;    // disable while investigating differences in validation plots.
 
   G4Track* track = aStep->GetTrack();
+
+  // AmBe tagger: PMT light readout. A counted photon is killed, so nothing
+  // below (BGO counters, boundary bookkeeping) applies to it.
+  if(track->GetDefinition() == G4OpticalPhoton::Definition() && TaggerPmtReadout(aStep)){
+    fExpectedNextStatus = Undefined;
+    return;
+  }
 
   // Draft for AmBe
   G4VPhysicalVolume* prePhysicalVolume =

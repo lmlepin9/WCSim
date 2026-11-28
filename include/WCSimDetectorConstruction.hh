@@ -230,6 +230,7 @@ public:
   void SetIncludeAmBeTagger(G4bool choice){IncludeAmBeTagger = choice;}
   G4bool GetIncludeAmBeTagger(){return IncludeAmBeTagger;}
   G4LogicalVolume* GetBGOScoringVol() const {return IncludeAmBeTagger ? AmBeTagger.GetScoringVolume() : nullptr;}
+  G4LogicalVolume* GetTaggerPmtPlane() const {return IncludeAmBeTagger ? AmBeTagger.GetPmtPlaneVolume(): nullptr;}
 
   // Debug: skip stacking-level QE culling for primary optical photons
   void SetBypassQEForPrimaryPhotons(G4bool choice){BypassQEForPrimaryPhotons = choice;}
