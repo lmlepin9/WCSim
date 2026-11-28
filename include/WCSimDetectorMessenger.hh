@@ -14,6 +14,7 @@ class G4UIcmdWithAString;
 #include "G4UIcmdWithADoubleAndUnit.hh"
 #include "G4UIcmdWithoutParameter.hh"
 #include "G4UIcmdWithABool.hh"
+#include "G4UIcmdWith3VectorAndUnit.hh"
 
 class WCSimDetectorMessenger: public G4UImessenger
 {
@@ -28,6 +29,8 @@ class WCSimDetectorMessenger: public G4UImessenger
   WCSimDetectorConstruction* WCSimDetector;
 
  private: //commands
+
+
   
   G4UIdirectory*      WCSimDir;
   G4UIcmdWithAString* PMTConfig;
@@ -35,6 +38,13 @@ class WCSimDetectorMessenger: public G4UImessenger
   G4UIcmdWithAString* PMTGeomDetails;
   G4UIcmdWithAString* PMTSize;
   G4UIcmdWithAString* SavePi0;
+
+  // AmBeTagger
+  G4UIdirectory* AmBeDir; 
+  G4UIcmdWithABool* IncludeAmBeTagger;
+  G4UIcmdWith3VectorAndUnit* taggerPosition;
+  G4UIcmdWith3VectorAndUnit* taggerRotation;
+
   G4UIcmdWithAString* PMTQEMethod;
   G4UIcmdWithAString* PMTCollEff;
   G4UIcmdWithADoubleAndUnit* waterTank_Length;

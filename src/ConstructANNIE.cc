@@ -80,6 +80,9 @@
 #include "WCSimPMTObject.hh"
 #include "WCSimLAPPDObject.hh"
 
+// AmBeTagger
+#include "AmBeTaggerGeometry.hh"
+
 #ifdef ENABLE_CADMESH
 #include "CADMesh.hh"
 #endif
@@ -242,6 +245,31 @@ G4LogicalVolume* WCSimDetectorConstruction::ConstructANNIE()
 				bordersurfaces.push_back(InnerStructureSurface_log);
 			}
 		}
+
+
+    if(IncludeAmBeTagger){
+      if(water_log==nullptr){
+				G4cerr<<"!!! could not find WCBarrel, AmBe tagger will not be added !!!"<<G4endl;
+			}
+
+      else{
+        G4cout << "--------------------------------------------" << G4endl;
+        
+        G4cout << "Including AmBe tagger geometry" << G4endl;
+        G4cout << "Tagger position: " 
+        << taggerPosition.x() << ", " 
+        << taggerPosition.y() << ", "
+        << taggerPosition.z() << " [mm]" << G4endl;
+
+        G4cout << "--------------------------------------------" << G4endl;
+        AmBeTagger.Build(water_log,
+          taggerPosition,
+          taggerRotation);
+
+      }
+
+    }
+  
 	}
 
   // Add markers for debugging (only debugging)

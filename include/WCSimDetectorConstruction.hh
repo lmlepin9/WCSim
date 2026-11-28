@@ -36,6 +36,9 @@
 #include "G4Trd.hh"
 #include "G4SystemOfUnits.hh"
 #include "SBsimMRDDB.hh"
+
+#include "AmBeTaggerGeometry.hh"
+
 static const G4double INCH = 2.54*cm;
 // *************/SciBooNE integration
 
@@ -222,6 +225,26 @@ public:
   void   SetVis_Choice(G4String choice){Vis_Choice = choice;}
   G4String GetVis_Choice() {return Vis_Choice;}
 
+  // AmBeTagger options ------------------------------------------------------------
+  
+  void SetIncludeAmBeTagger(G4bool choice){IncludeAmBeTagger = choice;}
+  G4bool GetIncludeAmBeTagger(){return IncludeAmBeTagger;}
+
+  void SetTaggerPosition(G4ThreeVector pos){taggerPosition = pos;}
+  G4ThreeVector GetTaggerPosition(){return taggerPosition;}
+
+  // Rotation angles are applied about the mother (WCBarrel) axes: X first,
+  // then Y, then Z.
+  void SetTaggerRotation(G4ThreeVector angles){
+    taggerRotation = G4RotationMatrix();
+    taggerRotation.rotateX(angles.x());
+    taggerRotation.rotateY(angles.y());
+    taggerRotation.rotateZ(angles.z());
+  }
+  G4RotationMatrix GetTaggerRotation(){return taggerRotation;}
+
+  //--------------------------------------------------------------------------------
+
   //Partition Length
   void SetwaterTank_Length(G4double length){waterTank_Length = length;}
   void SetWaterTubeLength(G4double length){WCLength = length;}
@@ -258,6 +281,13 @@ public:
     WCSimTuningParameters* Get_TuningParams(){return WCSimTuningParams;} 
 
 private:
+
+  // AmBeTagger Options
+  G4bool IncludeAmBeTagger; 
+  G4RotationMatrix taggerRotation;
+  G4ThreeVector taggerPosition; 
+
+  AmBeTaggerGeometry AmBeTagger;
 
   // Tuning parameters
 

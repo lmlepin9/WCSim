@@ -18,3 +18,6 @@
 /WCSim/physics/GdComposition Natural #options: Natural, 157Gd-enr, 155Gd-enr
 /WCSim/physics/GdCascade PeakAndCont #options: PeakAndCont, Peak, Cont
 
+#/WCSim/AmBe/IncludeAmBeTagger true
+#/WCSim/AmBe/TaggerPosition 0 0 0 cm
+#/WCSim/AmBe/TaggerRotation 0 0 0 deg

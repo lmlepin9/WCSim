@@ -87,14 +87,37 @@ WCSimDetectorMessenger::WCSimDetectorMessenger(WCSimDetectorConstruction* WCSimD
   SavePi0->SetParameterName("SavePi0",false);
   SavePi0->SetCandidates("true false");
   SavePi0->AvailableForStates(G4State_PreInit, G4State_Idle);
-  
+
   SaveCapture = new G4UIcmdWithAString("/WCSim/SaveCapture", this);
   SaveCapture->SetGuidance("true or false");
   SaveCapture->SetParameterName("SaveCapture",false);
   SaveCapture->SetCandidates("true false");
   SaveCapture->AvailableForStates(G4State_PreInit, G4State_Idle);
-  
-  
+
+  // Options for AmBeTagger -------------------------------------------------------
+  AmBeDir = new G4UIdirectory("/WCSim/AmBe/");
+  AmBeDir->SetGuidance("AmBe source/tagger geometry commands");
+
+  IncludeAmBeTagger = new G4UIcmdWithABool("/WCSim/AmBe/IncludeAmBeTagger",this);
+  IncludeAmBeTagger->SetGuidance("true or false | Add the AmBe tagger to the tank. This option has to be set in: jobOptions.mac");
+  IncludeAmBeTagger->SetParameterName("IncludeAmBeTagger",false);
+  IncludeAmBeTagger->AvailableForStates(G4State_PreInit, G4State_Idle);
+
+  taggerPosition = new G4UIcmdWith3VectorAndUnit("/WCSim/AmBe/TaggerPosition",this);
+  taggerPosition->SetGuidance("Set tagger position (BGO centre) in the tank water (WCBarrel) frame. This option has to be set in: jobOptions.mac");
+  taggerPosition->SetParameterName("x","y","z",false);
+  taggerPosition->SetDefaultUnit("cm");
+  taggerPosition->SetUnitCategory("Length");
+  taggerPosition->AvailableForStates(G4State_PreInit, G4State_Idle);
+
+  taggerRotation = new G4UIcmdWith3VectorAndUnit("/WCSim/AmBe/TaggerRotation",this);
+  taggerRotation->SetGuidance("Set tagger rotation about the WCBarrel axes (X, then Y, then Z). This option has to be set in: jobOptions.mac");
+  taggerRotation->SetParameterName("rotX", "rotY", "rotZ",false);
+  taggerRotation->SetDefaultUnit("deg");
+  taggerRotation->SetUnitCategory("Angle");
+  taggerRotation->AvailableForStates(G4State_PreInit, G4State_Idle);
+
+  //-----------------------------------------------------------------
   PMTQEMethod = new G4UIcmdWithAString("/WCSim/PMTQEMethod", this);
   PMTQEMethod->SetGuidance("Set the PMT configuration.");
   PMTQEMethod->SetGuidance("Available options are:\n"
@@ -202,11 +225,13 @@ WCSimDetectorMessenger::~WCSimDetectorMessenger()
   delete PMTCollEff;
   delete waterTank_Length;
   delete WCVisChoice;
-
   delete tubeCmd;
+  delete IncludeAmBeTagger;
+  delete taggerPosition;
+  delete taggerRotation;
+  delete AmBeDir;
   delete distortionCmd;
   delete WCSimDir;
-  
   delete WCConstruct;
 }
 
@@ -273,6 +298,19 @@ void WCSimDetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 	  }else{
 	    
 	  }
+	}
+
+	if (command == IncludeAmBeTagger){
+		G4cout << "Include AmBe Tagger geometry: " << newValue << G4endl;
+		WCSimDetector->SetIncludeAmBeTagger(IncludeAmBeTagger->GetNewBoolValue(newValue));
+	}
+
+	if (command == taggerPosition){
+		WCSimDetector->SetTaggerPosition(taggerPosition->GetNew3VectorValue(newValue));
+	}
+
+	if (command==taggerRotation){
+		WCSimDetector->SetTaggerRotation(taggerRotation->GetNew3VectorValue(newValue));
 	}
 
 	if (command == SaveCapture){
