@@ -123,6 +123,12 @@ WCSimDetectorMessenger::WCSimDetectorMessenger(WCSimDetectorConstruction* WCSimD
   bypassQEForPrimaryPhotons->SetDefaultValue(false);
   bypassQEForPrimaryPhotons->AvailableForStates(G4State_PreInit, G4State_Idle);
 
+  taggerStackingQE = new G4UIcmdWithABool("/WCSim/AmBe/TaggerStackingQE",this);
+  taggerStackingQE->SetGuidance("true or false | Cull optical photons born in the tagger BGO at birth with probability 1 - QE_max (R1398-04 peak QE) and accept them at the photocathode with probability QE(E)/QE_max. Same photoelectron statistics, ~4x fewer photons tracked; BGO tracked/created then reads ~QE_max. false: track every BGO photon and apply the full QE(E) at the photocathode. Default: true");
+  taggerStackingQE->SetParameterName("TaggerStackingQE",true);
+  taggerStackingQE->SetDefaultValue(true);
+  taggerStackingQE->AvailableForStates(G4State_PreInit, G4State_Idle);
+
   //-----------------------------------------------------------------
   PMTQEMethod = new G4UIcmdWithAString("/WCSim/PMTQEMethod", this);
   PMTQEMethod->SetGuidance("Set the PMT configuration.");
@@ -236,6 +242,7 @@ WCSimDetectorMessenger::~WCSimDetectorMessenger()
   delete taggerPosition;
   delete taggerRotation;
   delete bypassQEForPrimaryPhotons;
+  delete taggerStackingQE;
   delete AmBeDir;
   delete distortionCmd;
   delete WCSimDir;
@@ -323,6 +330,11 @@ void WCSimDetectorMessenger::SetNewValue(G4UIcommand* command,G4String newValue)
 	if (command == bypassQEForPrimaryPhotons){
 		G4cout << "Bypass stacking QE for primary optical photons: " << newValue << G4endl;
 		WCSimDetector->SetBypassQEForPrimaryPhotons(bypassQEForPrimaryPhotons->GetNewBoolValue(newValue));
+	}
+
+	if (command == taggerStackingQE){
+		G4cout << "AmBe tagger stacking-level QE culling of BGO photons: " << newValue << G4endl;
+		WCSimDetector->SetTaggerStackingQE(taggerStackingQE->GetNewBoolValue(newValue));
 	}
 
 	if (command == SaveCapture){

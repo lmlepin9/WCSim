@@ -69,8 +69,16 @@ G4bool WCSimSteppingAction::TaggerPmtReadout(const G4Step* aStep)
   // WCSimStackingAction and are only killed.
   if(track->GetLogicalVolumeAtVertex() == DetectorConstruction_->GetBGOScoringVol()){
     EventAction_->AddTaggerPmtPhoton();
-    if(TaggerPmtResponse_.ProducesPhotoelectron(track->GetKineticEnergy()))
-      EventAction_->AddTaggerPhotoelectron(track->GetGlobalTime());
+    // Secondaries born in the BGO were already culled at QE_max by
+    // WCSimStackingAction when TaggerStackingQE is on: apply only the
+    // remainder QE(E)/QE_max. Primaries (photon gun) were not culled there.
+    const G4bool culledAtBirth =
+        DetectorConstruction_->GetTaggerStackingQE() && track->GetCreatorProcess() != nullptr;
+    const G4double energy = track->GetKineticEnergy();
+    const G4bool producesPE = culledAtBirth
+        ? TaggerPmtResponse_.ProducesPhotoelectronAfterCulling(energy)
+        : TaggerPmtResponse_.ProducesPhotoelectron(energy);
+    if(producesPE) EventAction_->AddTaggerPhotoelectron(track->GetGlobalTime());
   }
   track->SetTrackStatus(fStopAndKill);
   return true;

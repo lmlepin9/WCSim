@@ -80,8 +80,19 @@ G4double PmtResponse::QuantumEfficiency(G4double photonEnergy) const
   return y0 + (photonEnergy - x0) * (y1 - y0) / (x1 - x0);
 }
 
+G4double PmtResponse::MaxQuantumEfficiency() const
+{
+  static const G4double maxQE = *std::max_element(qe.begin(), qe.end());
+  return maxQE;
+}
+
 G4bool PmtResponse::ProducesPhotoelectron(G4double photonEnergy) const
 {
   return G4UniformRand() < QuantumEfficiency(photonEnergy);
+}
+
+G4bool PmtResponse::ProducesPhotoelectronAfterCulling(G4double photonEnergy) const
+{
+  return G4UniformRand() * MaxQuantumEfficiency() < QuantumEfficiency(photonEnergy);
 }
 }

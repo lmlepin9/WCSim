@@ -22,3 +22,4 @@
 #/WCSim/AmBe/TaggerPosition 0 0 0 cm
 #/WCSim/AmBe/TaggerRotation 0 0 0 deg
 #/WCSim/AmBe/BypassQEForPrimaryPhotons true
+#/WCSim/AmBe/TaggerStackingQE true   # cull BGO photons at birth with the R1398-04 QE_max, QE(E)/QE_max at the photocathode (default true; false = track all BGO photons, full QE)

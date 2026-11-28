@@ -45,6 +45,7 @@ class WCSimDetectorMessenger: public G4UImessenger
   G4UIcmdWith3VectorAndUnit* taggerPosition;
   G4UIcmdWith3VectorAndUnit* taggerRotation;
   G4UIcmdWithABool* bypassQEForPrimaryPhotons;
+  G4UIcmdWithABool* taggerStackingQE;
 
   G4UIcmdWithAString* PMTQEMethod;
   G4UIcmdWithAString* PMTCollEff;

@@ -15,6 +15,7 @@
 
 // For waveform generation 
 #include "AmBeTaggerWaveformBuilder.hh"
+#include "AmBeTaggerPmtResponse.hh"
 
 #include "G4Event.hh"
 #include "G4RunManager.hh"
@@ -349,6 +350,9 @@ void WCSimEventAction::EndOfEventAction(const G4Event* evt)
         << BGOnCher << " Cherenkov, tracked " << BGOnTracked;
   if(BGOnScint + BGOnCher > 0)
     G4cout << " (tracked/created " << G4double(BGOnTracked)/(BGOnScint + BGOnCher) << ")";
+  if(detectorConstructor->GetTaggerStackingQE())
+    G4cout << "; TaggerStackingQE on, expected ratio QE_max = "
+           << AmBeTagger::PmtResponse().MaxQuantumEfficiency();
   G4cout << G4endl;
   G4double firstPETime = 0.;
   for(size_t i = 0; i < TaggerPETimes.size(); ++i){

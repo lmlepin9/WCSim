@@ -236,6 +236,12 @@ public:
   void SetBypassQEForPrimaryPhotons(G4bool choice){BypassQEForPrimaryPhotons = choice;}
   G4bool GetBypassQEForPrimaryPhotons() const {return BypassQEForPrimaryPhotons;}
 
+  // AmBe tagger: cull BGO-born optical photons at birth with the tagger PMT's
+  // peak QE and apply QE(E)/QE_max at the photocathode (same PE statistics,
+  // ~4x fewer photons tracked). false: track all, full QE at the photocathode.
+  void SetTaggerStackingQE(G4bool choice){TaggerStackingQE = choice;}
+  G4bool GetTaggerStackingQE() const {return TaggerStackingQE;}
+
   void SetTaggerPosition(G4ThreeVector pos){taggerPosition = pos;}
   G4ThreeVector GetTaggerPosition(){return taggerPosition;}
 
@@ -291,6 +297,7 @@ private:
   // AmBeTagger Options
   G4bool IncludeAmBeTagger; 
   G4bool BypassQEForPrimaryPhotons;
+  G4bool TaggerStackingQE;
   G4RotationMatrix taggerRotation;
   G4ThreeVector taggerPosition; 
 

@@ -48,10 +48,18 @@ G4ClassificationOfNewTrack WCSimStackingAction::ClassifyNewTrack
       }
 
       // Optical photons born in the AmBe tagger BGO: the tank PMT QE does not
-      // apply. They are all tracked; the tagger PMT applies its own QE.
+      // apply. With /WCSim/AmBe/TaggerStackingQE true they are kept with
+      // probability QE_max of the tagger PMT, and WCSimSteppingAction accepts
+      // them at the photocathode with QE(E)/QE_max; otherwise all are tracked.
+      // Primaries have no touchable yet, so GetVolume() is null and they never
+      // get here (the photocathode then applies the full QE to them).
       G4VPhysicalVolume* volume = aTrack->GetVolume();
       G4LogicalVolume* bgoVol = DetConstruct->GetBGOScoringVol();
       if(volume && bgoVol && volume->GetLogicalVolume() == bgoVol){
+        if(DetConstruct->GetTaggerStackingQE() &&
+           G4UniformRand() > TaggerPmtResponse.MaxQuantumEfficiency()){
+          classification = fKill;
+        }
         return classification;
       }
 

@@ -4,6 +4,7 @@
 #include "globals.hh"
 #include "G4UserStackingAction.hh"
 #include "WCSimDetectorConstruction.hh"
+#include "AmBeTaggerPmtResponse.hh"
 
 class G4Track;
 
@@ -20,6 +21,7 @@ class WCSimStackingAction : public G4UserStackingAction {
 
   private:
 	  WCSimDetectorConstruction*   DetConstruct;
+	  AmBeTagger::PmtResponse      TaggerPmtResponse;   // tagger QE_max for BGO photons
 
 };
 
