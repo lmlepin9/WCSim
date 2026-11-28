@@ -92,14 +92,18 @@ int main(int argc,char** argv)
 
   runManager->SetUserAction(myRunAction);
   G4cout<<"Creating Event Action"<<G4endl;
-  runManager->SetUserAction(new WCSimEventAction(myRunAction, WCSimdetector,
-						 myGeneratorAction));
+
+  // Updates to WCSimSteppingAction requires a pointer to the EventAction
+  WCSimEventAction* myEventAction = new WCSimEventAction(myRunAction, WCSimdetector, myGeneratorAction);
+  runManager->SetUserAction(myEventAction);
   G4cout<<"Creating Tracking Action"<<G4endl;
   runManager->SetUserAction(new WCSimTrackingAction);
   G4cout<<"Creating Stacking Action"<<G4endl;
   runManager->SetUserAction(new WCSimStackingAction(WCSimdetector));
+
+  // Stepping action now should accept EventAction and Detector
   G4cout<<"Creating Stepping Action"<<G4endl;
-  runManager->SetUserAction(new WCSimSteppingAction);
+  runManager->SetUserAction(new WCSimSteppingAction(myEventAction, WCSimdetector));
 
   G4cout<<"Initialising G4 kernel"<<G4endl;
   // Initialize G4 kernel
